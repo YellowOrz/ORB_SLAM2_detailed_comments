@@ -156,7 +156,7 @@ void KeyFrame::AddConnection(KeyFrame *pKF, const int &weight) {
     // 新建或更新连接权重
     if (!mConnectedKeyFrameWeights.count(pKF))
       // count函数返回0，说明mConnectedKeyFrameWeights中没有pKF，新建连接
-      mConnectedKeyFrameWeights[pKF] = weight;
+      mConnectedKeyFrameWeights[pKF] = weight;  // FIXME: 两个if的添加结果都一样，那为啥还要判断？直接添加不就好了
     else if (mConnectedKeyFrameWeights[pKF] != weight)
       // 之前连接的权重不一样了，需要更新
       mConnectedKeyFrameWeights[pKF] = weight;
@@ -178,7 +178,7 @@ void KeyFrame::UpdateBestCovisibles() {
   unique_lock<mutex> lock(mMutexConnections);
   // http://stackoverflow.com/questions/3389648/difference-between-stdliststdpair-and-stdmap-in-c-stl (std::map 和 std::list<std::pair>的区别)
 
-  vector<pair<int, KeyFrame *>> vPairs;
+  vector<pair<int, KeyFrame *> > vPairs;
   vPairs.reserve(mConnectedKeyFrameWeights.size());
   // 取出所有连接的关键帧，mConnectedKeyFrameWeights的类型为std::map<KeyFrame*,int>，而vPairs变量将共视的地图点数放在前面，利于排序
   for (map<KeyFrame *, int>::iterator mit = mConnectedKeyFrameWeights.begin(), mend = mConnectedKeyFrameWeights.end();
@@ -189,7 +189,7 @@ void KeyFrame::UpdateBestCovisibles() {
   sort(vPairs.begin(), vPairs.end());
 
   // 为什么要用链表保存？因为插入和删除操作方便，只需要修改上一节点位置，不需要移动其他元素
-  list < KeyFrame * > lKFs;   // 所有连接关键帧
+  list<KeyFrame *> lKFs;   // 所有连接关键帧
   list<int> lWs;          // 所有连接关键帧对应的权重（共视地图点数目）
   for (size_t i = 0, iend = vPairs.size(); i < iend; i++) {
     // push_front 后变成从大到小
@@ -207,7 +207,7 @@ void KeyFrame::UpdateBestCovisibles() {
 set<KeyFrame *> KeyFrame::GetConnectedKeyFrames() {
   unique_lock<mutex> lock(mMutexConnections);
 
-  set < KeyFrame * > s;
+  set<KeyFrame *> s;
   for (map<KeyFrame *, int>::iterator mit = mConnectedKeyFrameWeights.begin(); mit != mConnectedKeyFrameWeights.end();
        mit++)
     s.insert(mit->first);
@@ -312,7 +312,7 @@ void KeyFrame::ReplaceMapPointMatch(const size_t &idx, MapPoint *pMP) {
 set<MapPoint *> KeyFrame::GetMapPoints() {
   unique_lock<mutex> lock(mMutexFeatures);
 
-  set < MapPoint * > s;
+  set<MapPoint *> s;
   for (size_t i = 0, iend = mvpMapPoints.size(); i < iend; i++) {
     // 判断是否被删除了
     if (!mvpMapPoints[i])
@@ -375,8 +375,8 @@ MapPoint *KeyFrame::GetMapPoint(const size_t &idx) {
  */
 void KeyFrame::UpdateConnections() {
   // 关键帧-权重，权重为其它关键帧与当前关键帧共视地图点的个数，也称为共视程度
-  map < KeyFrame * , int > KFcounter;
-  vector < MapPoint * > vpMP;
+  map<KeyFrame *, int> KFcounter;
+  vector<MapPoint *> vpMP;
 
   {
     // 获得该关键帧的所有地图点
@@ -398,7 +398,7 @@ void KeyFrame::UpdateConnections() {
       continue;
 
     // 对于每一个地图点，observations记录了可以观测到该地图点的所有关键帧
-    map < KeyFrame * , size_t > observations = pMP->GetObservations();
+    map<KeyFrame *, size_t> observations = pMP->GetObservations();
 
     for (map<KeyFrame *, size_t>::iterator mit = observations.begin(), mend = observations.end(); mit != mend; mit++) {
       // 除去自身，自己与自己不算共视
@@ -426,7 +426,7 @@ void KeyFrame::UpdateConnections() {
 
   // vPairs记录与其它关键帧共视帧数大于th的关键帧
   // pair<int,KeyFrame*>将关键帧的权重写在前面，关键帧写在后面方便后面排序
-  vector<pair<int, KeyFrame *>> vPairs;
+  vector<pair<int, KeyFrame *> > vPairs;
   vPairs.reserve(KFcounter.size());
   // Step 2 找到对应权重最大的关键帧（共视程度最高的关键帧）
   for (map<KeyFrame *, int>::iterator mit = KFcounter.begin(), mend = KFcounter.end(); mit != mend; mit++) {
@@ -455,11 +455,12 @@ void KeyFrame::UpdateConnections() {
     pKFmax->AddConnection(this, nmax);
   }
 
+  // FIXME: 这里要有排序了，前面为啥还要排序？
   //  Step 4 对满足共视程度的关键帧对更新连接关系及权重（从大到小）
   // vPairs里存的都是相互共视程度比较高的关键帧和共视权重，接下来由大到小进行排序
   sort(vPairs.begin(), vPairs.end());         // sort函数默认升序排列
   // 将排序后的结果分别组织成为两种数据类型
-  list < KeyFrame * > lKFs;
+  list<KeyFrame *> lKFs;
   list<int> lWs;
   for (size_t i = 0; i < vPairs.size(); i++) {
     // push_front 后变成了从大到小顺序
@@ -610,7 +611,7 @@ void KeyFrame::SetBadFlag() {
     // Update Spanning Tree
     // Step 4 更新生成树，主要是处理好父子关键帧，不然会造成整个关键帧维护的图断裂，或者混乱
     // 候选父关键帧
-    set < KeyFrame * > sParentCandidates;
+    set<KeyFrame *> sParentCandidates;
     // 将当前帧的父关键帧放入候选父关键帧
     sParentCandidates.insert(mpParent);
 
@@ -633,7 +634,7 @@ void KeyFrame::SetBadFlag() {
 
         // Check if a parent candidate is connected to the keyframe
         // Step 4.2 子关键帧遍历每一个与它共视的关键帧
-        vector < KeyFrame * > vpConnected = pKF->GetVectorCovisibleKeyFrames();
+        vector<KeyFrame *> vpConnected = pKF->GetVectorCovisibleKeyFrames();
 
         for (size_t i = 0, iend = vpConnected.size(); i < iend; i++) {
           // sParentCandidates 中刚开始存的是这里子关键帧的“爷爷”，也是当前关键帧的候选父关键帧
@@ -789,7 +790,7 @@ cv::Mat KeyFrame::UnprojectStereo(int i) {
 // Compute Scene Depth (q=2 median). Used in monocular. 评估当前关键帧场景深度，q=2表示中值. 只是在单目情况下才会使用
 // 其实过程就是对当前关键帧下所有地图点的深度进行从小到大排序,返回距离头部其中1/q处的深度值作为当前场景的平均深度
 float KeyFrame::ComputeSceneMedianDepth(const int q) {
-  vector < MapPoint * > vpMapPoints;
+  vector<MapPoint *> vpMapPoints;
   cv::Mat Tcw_;
   {
     unique_lock<mutex> lock(mMutexFeatures);

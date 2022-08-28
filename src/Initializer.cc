@@ -132,8 +132,9 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
   // Step 2 在所有匹配特征点对中随机选择8对匹配特征点为一组，用于估计H矩阵和F矩阵
   // 共选择 mMaxIterations (默认200) 组
   //mvSets用于保存每次迭代时所使用的向量
-  mvSets = vector < vector < size_t > > (mMaxIterations,        //最大的RANSAC迭代次数
-      vector<size_t>(8, 0));    //这个则是第二维元素的初始值，也就是第一维。这里其实也是一个第一维的构造函数，第一维vector有8项，每项的初始值为0.
+  mvSets = vector<vector<size_t> >(mMaxIterations,        //最大的RANSAC迭代次数
+                                   vector<size_t>(8,
+                                                  0));    //这个则是第二维元素的初始值，也就是第一维。这里其实也是一个第一维的构造函数，第一维vector有8项，每项的初始值为0.
 
   //用于进行随机数据样本采样，设置随机数种子
   DUtils::Random::SeedRandOnce(0);
@@ -775,7 +776,7 @@ float Initializer::CheckFundamental(
   // ?是因为点到直线距离是一个自由度吗？
   const float th = 3.841;
 
-  // 自由度为2的卡方分布，显著性水平为0.05，对应的临界阈值
+  // 自由度为2的卡方分布，显著性水平为0.05，对应的临界阈值,(xzf)查表而来
   const float thScore = 5.991;
 
   // 信息矩阵，或 协方差矩阵的逆矩阵
@@ -962,6 +963,7 @@ bool Initializer::ReconstructF(vector<bool> &vbMatchesInliers,
 
   // Step 4.3 确定最小的可以三角化的点数
   // 在0.9倍的内点数 和 指定值minTriangulated =50 中取最大的，也就是说至少50个
+  // FIXME: @xzf 应该放在函数开始吧
   int nMinGood = max(static_cast<int>(0.9 * N), minTriangulated);
 
   // 统计四组解中重建的有效3D点个数 > 0.7 * maxGood 的解的数目

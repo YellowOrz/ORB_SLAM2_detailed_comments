@@ -612,6 +612,7 @@ vector<size_t> Frame::GetFeaturesInArea(const float &x,
   // Step 1 计算半径为r圆左右上下边界所在的网格列和行的id
   // 查找半径为r的圆左侧边界所在网格列坐标。这个地方有点绕，慢慢理解下：
   // (mnMaxX-mnMinX)/FRAME_GRID_COLS：表示列方向每个网格可以平均分得几个像素（肯定大于1）
+  // xzf mnMinX不一定为0，因为可能有图像畸变
   // mfGridElementWidthInv=FRAME_GRID_COLS/(mnMaxX-mnMinX) 是上面倒数，表示每个像素可以均分几个网格列（肯定小于1）
   // (x-mnMinX-r)，可以看做是从图像的左边界mnMinX到半径r的圆的左边界区域占的像素列数
   // 两者相乘，就是求出那个半径为r的圆的左侧边界在哪个网格列中
@@ -711,7 +712,6 @@ bool Frame::PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY) {
  * 
  */
 void Frame::ComputeBoW() {
-
   // 判断是否以前已经计算过了，计算过了就跳过
   if (mBowVec.empty()) {
     // 将描述子mDescriptors转换为DBOW要求的输入格式
@@ -855,7 +855,7 @@ void Frame::ComputeStereoMatches() {
   // 二维vector存储每一行的orb特征点的列坐标的索引，为什么是vector，因为每一行的特征点有可能不一样，例如
   // vRowIndices[0] = [1，2，5，8, 11]   第1行有5个特征点,他们的列号（即x坐标）分别是1,2,5,8,11
   // vRowIndices[1] = [2，6，7，9, 13, 17, 20]  第2行有7个特征点.etc
-  vector<vector<size_t>> vRowIndices(nRows, vector<size_t>());
+  vector<vector<size_t> > vRowIndices(nRows, vector<size_t>());
   for (int i = 0; i < nRows; i++) vRowIndices[i].reserve(200);
 
   // 右图特征点数量，N表示数量 r表示右图，且不能被修改
@@ -890,7 +890,7 @@ void Frame::ComputeStereoMatches() {
   const float maxD = mbf / minZ;    // 最大视差对应的距离是相机的基线
 
   // 保存sad块匹配相似度和左图特征点索引
-  vector<pair<int, int>> vDistIdx;
+  vector<pair<int, int> > vDistIdx;
   vDistIdx.reserve(N);
 
   // 为左图每一个特征点il，在右图搜索最相似的特征点ir

@@ -92,7 +92,7 @@ class TemplatedVocabulary {
    * @param training_features
    */
   virtual void create
-      (const std::vector<std::vector<TDescriptor>> &training_features);
+      (const std::vector<std::vector<TDescriptor> > &training_features);
 
   /**
    * Creates a vocabulary from the training features, setting the branching
@@ -102,7 +102,7 @@ class TemplatedVocabulary {
    * @param L depth levels
    */
   virtual void create
-      (const std::vector<std::vector<TDescriptor>> &training_features,
+      (const std::vector<std::vector<TDescriptor> > &training_features,
        int k, int L);
 
   /**
@@ -111,7 +111,7 @@ class TemplatedVocabulary {
    * schemes
    */
   virtual void create
-      (const std::vector<std::vector<TDescriptor>> &training_features,
+      (const std::vector<std::vector<TDescriptor> > &training_features,
        int k, int L, WeightingType weighting, ScoringType scoring);
 
   /**
@@ -538,7 +538,7 @@ TemplatedVocabulary<TDescriptor, F>::operator=
 
 template<class TDescriptor, class F>
 void TemplatedVocabulary<TDescriptor, F>::create(
-    const std::vector<std::vector<TDescriptor>> &training_features) {
+    const std::vector<std::vector<TDescriptor> > &training_features) {
   m_nodes.clear();
   m_words.clear();
 
@@ -571,7 +571,7 @@ void TemplatedVocabulary<TDescriptor, F>::create(
 
 template<class TDescriptor, class F>
 void TemplatedVocabulary<TDescriptor, F>::create(
-    const std::vector<std::vector<TDescriptor>> &training_features,
+    const std::vector<std::vector<TDescriptor> > &training_features,
     int k, int L) {
   m_k = k;
   m_L = L;
@@ -583,7 +583,7 @@ void TemplatedVocabulary<TDescriptor, F>::create(
 
 template<class TDescriptor, class F>
 void TemplatedVocabulary<TDescriptor, F>::create(
-    const std::vector<std::vector<TDescriptor>> &training_features,
+    const std::vector<std::vector<TDescriptor> > &training_features,
     int k, int L, WeightingType weighting, ScoringType scoring) {
   m_k = k;
   m_L = L;
@@ -602,8 +602,7 @@ void TemplatedVocabulary<TDescriptor, F>::getFeatures(
     vector<pDescriptor> &features) const {
   features.resize(0);
 
-  typename vector<vector < TDescriptor> > ::const_iterator
-  vvit;
+  typename vector<vector<TDescriptor> >::const_iterator vvit;
   typename vector<TDescriptor>::const_iterator vit;
   for (vvit = training_features.begin(); vvit != training_features.end(); ++vvit) {
     features.reserve(features.size() + vvit->size());
@@ -622,7 +621,7 @@ void TemplatedVocabulary<TDescriptor, F>::HKmeansStep(NodeId parent_id,
 
   // features associated to each cluster
   vector<TDescriptor> clusters;
-  vector<vector<unsigned int>> groups; // groups[i] = [j1, j2, ...]
+  vector<vector<unsigned int> > groups; // groups[i] = [j1, j2, ...]
   // j1, j2, ... indices of descriptors associated to cluster i
 
   clusters.reserve(m_k);
@@ -898,8 +897,7 @@ void TemplatedVocabulary<TDescriptor, F>::setNodeWeights
     vector<unsigned int> Ni(NWords, 0);
     vector<bool> counted(NWords, false);
 
-    typename vector<vector < TDescriptor> > ::const_iterator
-    mit;
+    typename vector<vector<TDescriptor> >::const_iterator mit;
     typename vector<TDescriptor>::const_iterator fit;
 
     for (mit = training_features.begin(); mit != training_features.end(); ++mit) {
@@ -975,9 +973,8 @@ WordValue TemplatedVocabulary<TDescriptor, F>::getWordWeight(WordId wid) const {
 template<class TDescriptor, class F>
 WordId TemplatedVocabulary<TDescriptor, F>::transform
     (const TDescriptor &feature) const {
-  if (empty()) {
-    return 0;
-  }
+  if (empty()) return 0;
+
 
   WordId wid;
   transform(feature, wid);
@@ -991,9 +988,7 @@ void TemplatedVocabulary<TDescriptor, F>::transform(
     const std::vector<TDescriptor> &features, BowVector &v) const {
   v.clear();
 
-  if (empty()) {
-    return;
-  }
+  if (empty()) return;
 
   // normalize 
   LNorm norm;
@@ -1018,10 +1013,9 @@ void TemplatedVocabulary<TDescriptor, F>::transform(
       const double nd = v.size();
       for (BowVector::iterator vit = v.begin(); vit != v.end(); vit++)
         vit->second /= nd;
-    }
+  } }
+  else{ // IDF || BINARY
 
-  } else // IDF || BINARY
-  {
     for (fit = features.begin(); fit < features.end(); ++fit) {
       WordId id;
       WordValue w;
@@ -1031,7 +1025,6 @@ void TemplatedVocabulary<TDescriptor, F>::transform(
 
       // not stopped
       if (w > 0) v.addIfNotExist(id, w);
-
     } // if add_features
   } // if m_weighting == ...
 
@@ -1053,13 +1046,10 @@ template<class TDescriptor, class F>
 void TemplatedVocabulary<TDescriptor, F>::transform(
     const std::vector<TDescriptor> &features,
     BowVector &v, FeatureVector &fv, int levelsup) const {
-  v.clear();
-  fv.clear();
+  v.clear();  // xzf：v记录所有出现过的节点的ID和对应的权重
+  fv.clear(); // xzf：fv记录所有中间节点下所有出现过的feature，这样之后的搜索只要在对应的中间节点下搜索即可，大大缩小搜索空间
 
-  if (empty()) // safe for subclasses
-  {
-    return;
-  }
+  if (empty()) return; // safe for subclasses NOTE: ???字典为空则退出
 
   // normalize 
   // 根据选择的评分类型来确定是否需要将BowVector 归一化
@@ -1067,7 +1057,6 @@ void TemplatedVocabulary<TDescriptor, F>::transform(
   bool must = m_scoring_object->mustNormalize(norm);
 
   typename vector<TDescriptor>::const_iterator fit;
-
   if (m_weighting == TF || m_weighting == TF_IDF) {
     unsigned int i_feature = 0;
     // 遍历图像中所有的特征点
@@ -1080,23 +1069,19 @@ void TemplatedVocabulary<TDescriptor, F>::transform(
       // w is the idf value if TF_IDF, 1 if TF 
       transform(*fit, id, w, &nid, levelsup);
 
-      if (w > 0) // not stopped
-      {
+      if (w > 0){ // not stopped
         // 如果Word 权重大于0，将其添加到BowVector 和 FeatureVector
         v.addWeight(id, w);
         fv.addFeature(nid, i_feature);
-      }
-    }
+    } }
 
     if (!v.empty() && !must) {
       // unnecessary when normalizing
       const double nd = v.size();
       for (BowVector::iterator vit = v.begin(); vit != v.end(); vit++)
         vit->second /= nd;
-    }
-
-  } else // IDF || BINARY
-  {
+  } }
+  else{ // IDF || BINARY  NOTE: 之后的内容没有讲
     unsigned int i_feature = 0;
     for (fit = features.begin(); fit < features.end(); ++fit, ++i_feature) {
       WordId id;
@@ -1105,13 +1090,10 @@ void TemplatedVocabulary<TDescriptor, F>::transform(
       // w is idf if IDF, or 1 if BINARY
       transform(*fit, id, w, &nid, levelsup);
 
-      if (w > 0) // not stopped
-      {
+      if (w > 0){ // not stopped
         v.addIfNotExist(id, w);
         fv.addFeature(nid, i_feature);
-      }
-    }
-  } // if m_weighting == ...
+  } } }// if m_weighting == ...
 
   if (must) v.normalize(norm);
 }
@@ -1181,13 +1163,10 @@ void TemplatedVocabulary<TDescriptor, F>::transform(const TDescriptor &feature,
       if (d < best_d) {
         best_d = d;
         final_id = id;
-      }
-    }
+    } }
 
     // 记录当前描述子转化为Word后所属的 node id，它距离叶子深度为levelsup
-    if (nid != NULL && current_level == nid_level)
-      *nid = final_id;
-
+    if (nid != NULL && current_level == nid_level)  *nid = final_id;
   } while (!m_nodes[final_id].isLeaf());
 
   // turn node id into word id

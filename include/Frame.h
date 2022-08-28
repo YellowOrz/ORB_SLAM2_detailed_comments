@@ -350,7 +350,7 @@ class Frame {
   ///判断远点和近点的深度阈值
   float mThDepth;
 
-  // Number of KeyPoints.
+  // Number of KeyPoints. xzf: keypoint不一定都是地图点
   int N;
 
   /**

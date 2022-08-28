@@ -68,7 +68,7 @@ else (EIGEN3_INCLUDE_DIR)
 
   find_path(EIGEN3_INCLUDE_DIR NAMES signature_of_eigen3_matrix_library
       PATHS
-      /home/guoqing/libraries/eigen_333/include
+      /usr/include
       ${CMAKE_INSTALL_PREFIX}/include
       ${EIGEN_ADDITIONAL_SEARCH_PATHS}
       ${KDE4_INCLUDE_DIR}
