@@ -24,29 +24,26 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-template <int D, typename E, typename VertexXiType>
-void BaseUnaryEdge<D, E, VertexXiType>::resize(size_t size)
-{
+template<int D, typename E, typename VertexXiType>
+void BaseUnaryEdge<D, E, VertexXiType>::resize(size_t size) {
   if (size != 1) {
     std::cerr << "WARNING, attempting to resize unary edge " << BaseEdge<D, E>::id() << " to " << size << std::endl;
   }
   BaseEdge<D, E>::resize(size);
 }
 
-template <int D, typename E, typename VertexXiType>
-bool BaseUnaryEdge<D, E, VertexXiType>::allVerticesFixed() const
-{
-  return static_cast<const VertexXiType*> (_vertices[0])->fixed();
+template<int D, typename E, typename VertexXiType>
+bool BaseUnaryEdge<D, E, VertexXiType>::allVerticesFixed() const {
+  return static_cast<const VertexXiType *> (_vertices[0])->fixed();
 }
 
-template <int D, typename E, typename VertexXiType>
-void BaseUnaryEdge<D, E, VertexXiType>::constructQuadraticForm()
-{
-  VertexXiType* from=static_cast<VertexXiType*>(_vertices[0]);
+template<int D, typename E, typename VertexXiType>
+void BaseUnaryEdge<D, E, VertexXiType>::constructQuadraticForm() {
+  VertexXiType *from = static_cast<VertexXiType *>(_vertices[0]);
 
   // chain rule to get the Jacobian of the nodes in the manifold domain
-  const JacobianXiOplusType& A = jacobianOplusXi();
-  const InformationType& omega = _information;
+  const JacobianXiOplusType &A = jacobianOplusXi();
+  const InformationType &omega = _information;
 
   bool istatus = !from->fixed();
   if (istatus) {
@@ -71,18 +68,16 @@ void BaseUnaryEdge<D, E, VertexXiType>::constructQuadraticForm()
   }
 }
 
-template <int D, typename E, typename VertexXiType>
-void BaseUnaryEdge<D, E, VertexXiType>::linearizeOplus(JacobianWorkspace& jacobianWorkspace)
-{
-  new (&_jacobianOplusXi) JacobianXiOplusType(jacobianWorkspace.workspaceForVertex(0), D, VertexXiType::Dimension);
+template<int D, typename E, typename VertexXiType>
+void BaseUnaryEdge<D, E, VertexXiType>::linearizeOplus(JacobianWorkspace &jacobianWorkspace) {
+  new(&_jacobianOplusXi) JacobianXiOplusType(jacobianWorkspace.workspaceForVertex(0), D, VertexXiType::Dimension);
   linearizeOplus();
 }
 
-template <int D, typename E, typename VertexXiType>
-void BaseUnaryEdge<D, E, VertexXiType>::linearizeOplus()
-{
+template<int D, typename E, typename VertexXiType>
+void BaseUnaryEdge<D, E, VertexXiType>::linearizeOplus() {
   //Xi - estimate the jacobian numerically
-  VertexXiType* vi = static_cast<VertexXiType*>(_vertices[0]);
+  VertexXiType *vi = static_cast<VertexXiType *>(_vertices[0]);
 
   if (vi->fixed())
     return;
@@ -92,7 +87,7 @@ void BaseUnaryEdge<D, E, VertexXiType>::linearizeOplus()
 #endif
 
   const double delta = 1e-9;
-  const double scalar = 1.0 / (2*delta);
+  const double scalar = 1.0 / (2 * delta);
   ErrorVector error1;
   ErrorVector errorBeforeNumeric = _error;
 
@@ -122,8 +117,9 @@ void BaseUnaryEdge<D, E, VertexXiType>::linearizeOplus()
 #endif
 }
 
-template <int D, typename E, typename VertexXiType>
-void BaseUnaryEdge<D, E, VertexXiType>::initialEstimate(const OptimizableGraph::VertexSet&, OptimizableGraph::Vertex*)
-{
-  std::cerr << __PRETTY_FUNCTION__ << " is not implemented, please give implementation in your derived class" << std::endl;
+template<int D, typename E, typename VertexXiType>
+void BaseUnaryEdge<D, E, VertexXiType>::initialEstimate(const OptimizableGraph::VertexSet &,
+                                                        OptimizableGraph::Vertex *) {
+  std::cerr << __PRETTY_FUNCTION__ << " is not implemented, please give implementation in your derived class"
+            << std::endl;
 }

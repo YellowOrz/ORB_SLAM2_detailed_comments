@@ -40,14 +40,12 @@ using namespace std;
 
 namespace g2o {
 
-Factory* Factory::factoryInstance = 0;
+Factory *Factory::factoryInstance = 0;
 
-Factory::Factory()
-{
+Factory::Factory() {
 }
 
-Factory::~Factory()
-{
+Factory::~Factory() {
 # ifdef G2O_DEBUG_FACTORY
   cerr << "# Factory destroying " << (void*)this << endl;
 # endif
@@ -58,8 +56,7 @@ Factory::~Factory()
   _tagLookup.clear();
 }
 
-Factory* Factory::instance()
-{
+Factory *Factory::instance() {
   if (factoryInstance == 0) {
     factoryInstance = new Factory;
 #  ifdef G2O_DEBUG_FACTORY
@@ -70,8 +67,7 @@ Factory* Factory::instance()
   return factoryInstance;
 }
 
-void Factory::registerType(const std::string& tag, AbstractHyperGraphElementCreator* c)
-{
+void Factory::registerType(const std::string &tag, AbstractHyperGraphElementCreator *c) {
   CreatorMap::const_iterator foundIt = _creator.find(tag);
   if (foundIt != _creator.end()) {
     cerr << "FACTORY WARNING: Overwriting Vertex tag " << tag << endl;
@@ -83,14 +79,14 @@ void Factory::registerType(const std::string& tag, AbstractHyperGraphElementCrea
     assert(0);
   }
 
-  CreatorInformation* ci = new CreatorInformation();
+  CreatorInformation *ci = new CreatorInformation();
   ci->creator = c;
 
 #ifdef G2O_DEBUG_FACTORY
   cerr << "# Factory " << (void*)this << " constructing type " << tag << " ";
 #endif
   // construct an element once to figure out its type
-  HyperGraph::HyperGraphElement* element = c->construct();
+  HyperGraph::HyperGraphElement *element = c->construct();
   ci->elementTypeBit = element->elementType();
 
 #ifdef G2O_DEBUG_FACTORY
@@ -125,27 +121,24 @@ void Factory::registerType(const std::string& tag, AbstractHyperGraphElementCrea
   delete element;
 }
 
-  void Factory::unregisterType(const std::string& tag)
-  {
-    // Look for the tag
-    CreatorMap::iterator tagPosition = _creator.find(tag);
+void Factory::unregisterType(const std::string &tag) {
+  // Look for the tag
+  CreatorMap::iterator tagPosition = _creator.find(tag);
 
-    if (tagPosition != _creator.end()) {
+  if (tagPosition != _creator.end()) {
 
-      AbstractHyperGraphElementCreator* c = tagPosition->second->creator;
+    AbstractHyperGraphElementCreator *c = tagPosition->second->creator;
 
-      // If we found it, remove the creator from the tag lookup map
-      TagLookup::iterator classPosition = _tagLookup.find(c->name());
-      if (classPosition != _tagLookup.end())
-        {
-          _tagLookup.erase(classPosition);
-        }
-      _creator.erase(tagPosition);
+    // If we found it, remove the creator from the tag lookup map
+    TagLookup::iterator classPosition = _tagLookup.find(c->name());
+    if (classPosition != _tagLookup.end()) {
+      _tagLookup.erase(classPosition);
     }
+    _creator.erase(tagPosition);
   }
+}
 
-HyperGraph::HyperGraphElement* Factory::construct(const std::string& tag) const
-{
+HyperGraph::HyperGraphElement *Factory::construct(const std::string &tag) const {
   CreatorMap::const_iterator foundIt = _creator.find(tag);
   if (foundIt != _creator.end()) {
     //cerr << "tag " << tag << " -> " << (void*) foundIt->second->creator << " " << foundIt->second->creator->name() << endl;
@@ -154,8 +147,7 @@ HyperGraph::HyperGraphElement* Factory::construct(const std::string& tag) const
   return 0;
 }
 
-const std::string& Factory::tag(const HyperGraph::HyperGraphElement* e) const
-{
+const std::string &Factory::tag(const HyperGraph::HyperGraphElement *e) const {
   static std::string emptyStr("");
   TagLookup::const_iterator foundIt = _tagLookup.find(typeid(*e).name());
   if (foundIt != _tagLookup.end())
@@ -163,15 +155,13 @@ const std::string& Factory::tag(const HyperGraph::HyperGraphElement* e) const
   return emptyStr;
 }
 
-void Factory::fillKnownTypes(std::vector<std::string>& types) const
-{
+void Factory::fillKnownTypes(std::vector<std::string> &types) const {
   types.clear();
   for (CreatorMap::const_iterator it = _creator.begin(); it != _creator.end(); ++it)
     types.push_back(it->first);
 }
 
-bool Factory::knowsTag(const std::string& tag, int* elementType) const
-{
+bool Factory::knowsTag(const std::string &tag, int *elementType) const {
   CreatorMap::const_iterator foundIt = _creator.find(tag);
   if (foundIt == _creator.end()) {
     if (elementType)
@@ -183,14 +173,12 @@ bool Factory::knowsTag(const std::string& tag, int* elementType) const
   return true;
 }
 
-void Factory::destroy()
-{
+void Factory::destroy() {
   delete factoryInstance;
   factoryInstance = 0;
 }
 
-void Factory::printRegisteredTypes(std::ostream& os, bool comment) const
-{
+void Factory::printRegisteredTypes(std::ostream &os, bool comment) const {
   if (comment)
     os << "# ";
   os << "types:" << endl;
@@ -201,13 +189,14 @@ void Factory::printRegisteredTypes(std::ostream& os, bool comment) const
   }
 }
 
-HyperGraph::HyperGraphElement* Factory::construct(const std::string& tag, const HyperGraph::GraphElemBitset& elemsToConstruct) const
-{
+HyperGraph::HyperGraphElement *Factory::construct(const std::string &tag,
+                                                  const HyperGraph::GraphElemBitset &elemsToConstruct) const {
   if (elemsToConstruct.none()) {
     return construct(tag);
   }
   CreatorMap::const_iterator foundIt = _creator.find(tag);
-  if (foundIt != _creator.end() && foundIt->second->elementTypeBit >= 0 && elemsToConstruct.test(foundIt->second->elementTypeBit)) {
+  if (foundIt != _creator.end() && foundIt->second->elementTypeBit >= 0
+      && elemsToConstruct.test(foundIt->second->elementTypeBit)) {
     return foundIt->second->creator->construct();
   }
   return 0;

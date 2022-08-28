@@ -15,9 +15,8 @@
 namespace DBoW2 {
 
 /// Base class of scoring functions
-class GeneralScoring
-{
-public:
+class GeneralScoring {
+ public:
   /**
    * Computes the score between two vectors. Vectors must be sorted and 
    * normalized if necessary
@@ -36,12 +35,12 @@ public:
   virtual bool mustNormalize(LNorm &norm) const = 0;
 
   /// Log of epsilon
-	static const double LOG_EPS; 
+  static const double LOG_EPS;
   // If you change the type of WordValue, make sure you change also the
-	// epsilon value (this is needed by the KL method)
+  // epsilon value (this is needed by the KL method)
 
   virtual ~GeneralScoring() {} //!< Required for virtual base classes
-	
+
 };
 
 /** 
@@ -69,7 +68,7 @@ public:
     virtual inline bool mustNormalize(LNorm &norm) const  \
       { norm = NORM; return MUSTNORMALIZE; } \
   }
-  
+
 /// L1 Scoring object
 class __SCORING_CLASS(L1Scoring, true, L1);
 
@@ -89,7 +88,7 @@ class __SCORING_CLASS(BhattacharyyaScoring, true, L1);
 class __SCORING_CLASS(DotProductScoring, false, L1);
 
 #undef __SCORING_CLASS
-  
+
 } // namespace DBoW2
 
 #endif

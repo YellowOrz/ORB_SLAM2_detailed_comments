@@ -19,9 +19,8 @@
 namespace DBoW2 {
 
 /// Functions to manipulate ORB descriptors
-class FORB: protected FClass
-{
-public:
+class FORB : protected FClass {
+ public:
 
   /// Descriptor type
   typedef cv::Mat TDescriptor; // CV_8U
@@ -36,7 +35,7 @@ public:
    * @param mean mean descriptor
    */
   static void meanValue(const std::vector<pDescriptor> &descriptors,
-    TDescriptor &mean);
+                        TDescriptor &mean);
 
   /**
    * Calculates the distance between two descriptors
@@ -66,10 +65,10 @@ public:
    * @param mat (out) NxL 32F matrix
    */
   static void toMat32F(const std::vector<TDescriptor> &descriptors,
-    cv::Mat &mat);
+                       cv::Mat &mat);
 
   static void toMat8U(const std::vector<TDescriptor> &descriptors,
-    cv::Mat &mat);
+                      cv::Mat &mat);
 
 };
 

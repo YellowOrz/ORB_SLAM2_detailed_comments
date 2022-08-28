@@ -1,13 +1,13 @@
-       /**
- * @file PnPsolver.h
- * @author guoqing (1337841346@qq.com)
- * @brief EPnP 相机位姿求解器，貌似这里ORB-SLAM2也是使用了开源的代码
- * @version 0.1
- * @date 2019-05-08
- * 
- * @copyright Copyright (c) 2019
- * 
- */
+/**
+* @file PnPsolver.h
+* @author guoqing (1337841346@qq.com)
+* @brief EPnP 相机位姿求解器，貌似这里ORB-SLAM2也是使用了开源的代码
+* @version 0.1
+* @date 2019-05-08
+*
+* @copyright Copyright (c) 2019
+*
+*/
 
 /**
 * This file is part of ORB-SLAM2.
@@ -69,19 +69,18 @@
 #include "MapPoint.h"
 #include "Frame.h"
 
-namespace ORB_SLAM2
-{
+namespace ORB_SLAM2 {
 
 /** @brief 相机位姿求解器 */
 class PnPsolver {
-public:
+ public:
 
   /**
    * @brief 构造函数
    * @param[in] F                   当前要求解位姿的帧
    * @param[in] vpMapPointMatches   地图点,可能来自与局部地图,也可能来自于参考关键帧
    */
-  PnPsolver(const Frame &F, const vector<MapPoint*> &vpMapPointMatches);
+  PnPsolver(const Frame &F, const vector<MapPoint *> &vpMapPointMatches);
 
   /** @brief 析构函数 */
   ~PnPsolver();
@@ -95,7 +94,11 @@ public:
    * @param[in] epsilon           希望得到的 内点数/总体数 的比值,参与到最小内点数的确定过程中
    * @param[in] th2               内外点判定时的距离的baseline(程序中还会根据特征点所在的图层对这个阈值进行缩放的)
    */
-  void SetRansacParameters(double probability = 0.99, int minInliers = 8 , int maxIterations = 300, int minSet = 4, float epsilon = 0.4,
+  void SetRansacParameters(double probability = 0.99,
+                           int minInliers = 8,
+                           int maxIterations = 300,
+                           int minSet = 4,
+                           float epsilon = 0.4,
                            float th2 = 5.991);
 
   // REVIEW 目测这个函数没有被调用过
@@ -142,7 +145,7 @@ public:
    * @param[in] v    2D点
    */
   void add_correspondence(const double X, const double Y, const double Z,
-              const double u, const double v);
+                          const double u, const double v);
 
   /**
    * @brief 使用EPnP算法计算相机的位姿.其中匹配点的信息由类的成员函数给定 
@@ -162,9 +165,9 @@ public:
    * @param[in]  test              平移计算值
    * @deprecated 在ORB中没有用到
    */
-  void relative_error(double & rot_err, double & transl_err,
-              const double Rtrue[3][3], const double ttrue[3],
-              const double Rest[3][3],  const double test[3]);
+  void relative_error(double &rot_err, double &transl_err,
+                      const double Rtrue[3][3], const double ttrue[3],
+                      const double Rest[3][3], const double test[3]);
 
   /**
    * @brief 输出计算得到的位姿.这个函数是EPnP源码中自带的,用于调试,所以在ORB中应当算是一个被放弃了的函数(因为我们并不需要输出啊)
@@ -186,7 +189,7 @@ public:
    * 
    */
   void choose_control_points(void);
-  
+
   /**
   * @brief 求解世界坐标系下四个控制点的系数alphas，在相机坐标系下系数不变
   * 
@@ -201,13 +204,13 @@ public:
    * @param[in] u                2D点坐标
    * @param[in] v                2D点坐标 
    */
-  void fill_M(CvMat * M, const int row, const double * alphas, const double u, const double v);
+  void fill_M(CvMat *M, const int row, const double *alphas, const double u, const double v);
   /**
    * @brief 通过给出的beta和vi,计算控制点在相机坐标系下的坐标
    * @param[in] betas       beta
    * @param[in] ut          其实是vi
    */
-  void compute_ccs(const double * betas, const double * ut);
+  void compute_ccs(const double *betas, const double *ut);
 
   /**
   * @brief 根据相机坐标系下控制点坐标ccs 和控制点系数 alphas（通过世界坐标系下3D点计算得到），得到相机坐标系下3D点坐标 pcs
@@ -224,7 +227,7 @@ public:
    * @param[in]  Rho     非齐次项 \rho, 列向量
    * @param[out] betas   计算得到的beta
    */
-  void find_betas_approx_1(const CvMat * L_6x10, const CvMat * Rho, double * betas);
+  void find_betas_approx_1(const CvMat *L_6x10, const CvMat *Rho, double *betas);
 
   /**
    * @brief 计算N=2时候的粗糙近似解，暴力将其他量置为0
@@ -233,7 +236,7 @@ public:
    * @param[in]  Rho     非齐次项 \rho, 列向量
    * @param[out] betas   计算得到的beta
    */
-  void find_betas_approx_2(const CvMat * L_6x10, const CvMat * Rho, double * betas);
+  void find_betas_approx_2(const CvMat *L_6x10, const CvMat *Rho, double *betas);
 
   /**
    * @brief 计算N=3时候的粗糙近似解，暴力将其他量置为0
@@ -242,14 +245,14 @@ public:
    * @param[in]  Rho     非齐次项 \rho, 列向量
    * @param[out] betas   计算得到的beta
    */
-  void find_betas_approx_3(const CvMat * L_6x10, const CvMat * Rho, double * betas);
+  void find_betas_approx_3(const CvMat *L_6x10, const CvMat *Rho, double *betas);
   /**
    * @brief 使用QR分解来求解增量方程 
    * @param[in]  A   洗漱矩阵
    * @param[in]  b   非齐次项
    * @param[out] X   增量
    */
-  void qr_solve(CvMat * A, CvMat * b, CvMat * X);
+  void qr_solve(CvMat *A, CvMat *b, CvMat *X);
 
   /**
    * @brief 计算两个三维向量的点乘
@@ -257,34 +260,34 @@ public:
    * @param[in] v2 向量2
    * @return double 计算结果
    */
-  double dot(const double * v1, const double * v2);
+  double dot(const double *v1, const double *v2);
   /**
    * @brief 计算两个三维向量所表示的空间点的欧式距离的平方
    * @param[in] p1   点1
    * @param[in] p2   点2
    * @return double  计算的距离结果
    */
-  double dist2(const double * p1, const double * p2);
- 
+  double dist2(const double *p1, const double *p2);
+
   /**
    * @brief 计算四个控制点任意两点间的距离，总共6个距离，对应论文式13中的向量\rho
    * @param[in] rho  计算结果
    */
-  void compute_rho(double * rho);
+  void compute_rho(double *rho);
 
   /**
    * @brief 计算矩阵L,论文式13中的L矩阵,不过这里的是按照N=4的时候计算的
    * @param[in]  ut               特征值分解之后得到的12x12特征矩阵
    * @param[out] l_6x10           计算的L矩阵结果，维度6x10 
    */
-  void compute_L_6x10(const double * ut, double * l_6x10);
+  void compute_L_6x10(const double *ut, double *l_6x10);
   /**
    * @brief 对计算出来的Beta结果进行高斯牛顿法优化,求精. 过程参考EPnP论文中式(15) 
    * @param[in]  L_6x10            L矩阵
    * @param[in]  Rho               Rho向量
    * @param[out] current_betas     优化之后的Beta
    */
-  void gauss_newton(const CvMat * L_6x10, const CvMat * Rho, double current_betas[4]);
+  void gauss_newton(const CvMat *L_6x10, const CvMat *Rho, double current_betas[4]);
   /**
    * @brief 计算高斯牛顿法优化时,增量方程中的系数矩阵和非齐次项
    * @param[in]  l_6x10 L矩阵
@@ -293,8 +296,8 @@ public:
    * @param[out] A      计算得到的增量方程中的系数矩阵
    * @param[out] b      计算得到的增量方程中的非齐次项
    */
-  void compute_A_and_b_gauss_newton(const double * l_6x10, const double * rho,
-				    double cb[4], CvMat * A, CvMat * b);
+  void compute_A_and_b_gauss_newton(const double *l_6x10, const double *rho,
+                                    double cb[4], CvMat *A, CvMat *b);
 
   /**
    * @brief 根据已经得到的控制点在当前相机坐标系下的坐标来恢复出相机的位姿
@@ -304,8 +307,8 @@ public:
    * @param[out] t          计算得到的相机位置t
    * @return double         使用这个位姿,所得到的重投影误差
    */
-  double compute_R_and_t(const double * ut, const double * betas,
-			 double R[3][3], double t[3]);
+  double compute_R_and_t(const double *ut, const double *betas,
+                         double R[3][3], double t[3]);
 
   /**
    * @brief 用3D点在世界坐标系和相机坐标系下对应的坐标，用ICP求取R t
@@ -321,7 +324,7 @@ public:
    * @param[out] t_src 
    */
   void copy_R_and_t(const double R_dst[3][3], const double t_dst[3],
-		    double R_src[3][3], double t_src[3]);
+                    double R_src[3][3], double t_src[3]);
 
   /**
    * @brief 目测没有使用到的函数, 在原版的EPnP中勇于将旋转矩阵转换成为四元数的表达形式
@@ -331,24 +334,23 @@ public:
    */
   void mat_to_quat(const double R[3][3], double q[4]);
 
-
   double uc, vc, fu, fv;                                          // 相机内参
 
-  double * pws,                                                   // 3D点在世界坐标系下在坐标
-                                                                  //   组织形式: x1 y1 z1 | x2 y2 z2 | ...
-         * us,                                                    // 图像坐标系下的2D点坐标
-                                                                  //   组织形式: u1 v1 | u2 v2 | ...
-         * alphas,                                                // 真实3D点用4个虚拟控制点表达时的系数
-                                                                  //   组织形式: a11 a12 a13 a14 | a21 a22 a23 a24 | ... 每个匹配点都有自己的a1~a4
-         * pcs;                                                   // 3D点在当前帧相机坐标系下的坐标 
+  double *pws,                                                   // 3D点在世界坐标系下在坐标
+  //   组织形式: x1 y1 z1 | x2 y2 z2 | ...
+  *us,                                                    // 图像坐标系下的2D点坐标
+  //   组织形式: u1 v1 | u2 v2 | ...
+  *alphas,                                                // 真实3D点用4个虚拟控制点表达时的系数
+  //   组织形式: a11 a12 a13 a14 | a21 a22 a23 a24 | ... 每个匹配点都有自己的a1~a4
+  *pcs;                                                   // 3D点在当前帧相机坐标系下的坐标
   int maximum_number_of_correspondences;                          // 每次RANSAC计算的过程中使用的匹配点对数的最大值,其实应该和最小集的大小是完全相同的
   int number_of_correspondences;                                  // 当前次迭代中,已经采样的匹配点的个数，默认值为4
 
   double cws[4][3],                                               // 存储控制点在世界坐标系下的坐标，第一维表示是哪个控制点，第二维表示是哪个坐标(x,y,z)
-         ccs[4][3];                                               // 存储控制点在相机坐标系下的坐标, 含义同上
+  ccs[4][3];                                               // 存储控制点在相机坐标系下的坐标, 含义同上
   double cws_determinant;                                         // 没有被使用到的变量,但是看变量名字,应该是用于存储某个矩阵的行列式值的
 
-  vector<MapPoint*> mvpMapPointMatches;                           // 存储构造的时候给出的地图点 
+  vector<MapPoint *> mvpMapPointMatches;                           // 存储构造的时候给出的地图点
 
   // 2D Points
   vector<cv::Point2f> mvP2D;                                      // 存储当前帧的2D点,由特征点转换而来,只保存了坐标信息
