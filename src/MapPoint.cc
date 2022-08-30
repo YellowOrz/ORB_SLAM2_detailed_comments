@@ -123,7 +123,7 @@ cv::Mat MapPoint::GetWorldPos() {
   return mWorldPos.clone();
 }
 
-//世界坐标系下地图点被多个相机观测的平均观测方向
+//世界坐标系下地图点被多个相机观测的平均观测方向 // xzf: 是这个地图点的
 cv::Mat MapPoint::GetNormal() {
   unique_lock<mutex> lock(mMutexPos);
   return mNormalVector.clone();
@@ -202,7 +202,7 @@ int MapPoint::Observations() {
 }
 
 /**
- * @brief 告知可以观测到该MapPoint的Frame，该MapPoint已被删除
+ * @brief 告知可以观测到该MapPoint的Frame 该MapPoint已被删除
  * 
  */
 void MapPoint::SetBadFlag() {
@@ -570,11 +570,9 @@ int MapPoint::PredictScale(const float &currentDist, Frame *pF) {
     ratio = mfMaxDistance / currentDist;
   }
 
-  int nScale = ceil(log(ratio) / pF->mfLogScaleFactor);
-  if (nScale < 0)
-    nScale = 0;
-  else if (nScale >= pF->mnScaleLevels)
-    nScale = pF->mnScaleLevels - 1;
+  int nScale = ceil(log(ratio) / pF->mfLogScaleFactor); // xzf: 金字塔尺度因子为1.2，∴1.2^(n-1) < d/d_max < 1.2^n 见视频第24讲12:07
+  if (nScale < 0) nScale = 0;
+  else if (nScale >= pF->mnScaleLevels) nScale = pF->mnScaleLevels - 1;
 
   return nScale;
 }

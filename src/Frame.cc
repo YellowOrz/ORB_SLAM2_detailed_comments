@@ -520,8 +520,7 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit) {
 
   // Check positive depth
   // Step 2 关卡一：将这个地图点变换到当前帧的相机坐标系下，如果深度值为正才能继续下一步。
-  if (PcZ < 0.0f)
-    return false;
+  if (PcZ < 0.0f) return false;
 
   // Project in image and check it is not outside
   // Step 3 关卡二：将地图点投影到当前帧的像素坐标，如果在图像有效范围内才能继续下一步。
@@ -530,10 +529,8 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit) {
   const float v = fy * PcY * invz + cy;
 
   // 判断是否在图像边界中，只要不在那么就说明无法在当前帧下进行重投影
-  if (u < mnMinX || u > mnMaxX)
-    return false;
-  if (v < mnMinY || v > mnMaxY)
-    return false;
+  if (u < mnMinX || u > mnMaxX) return false;
+  if (v < mnMinY || v > mnMaxY) return false;
 
   // Check distance is in the scale invariance region of the MapPoint
   // Step 4 关卡三：计算地图点到相机中心的距离，如果在有效距离范围内才能继续下一步。
@@ -548,19 +545,17 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit) {
   const float dist = cv::norm(PO);
 
   //如果不在有效范围内，认为投影不可靠
-  if (dist < minDistance || dist > maxDistance)
-    return false;
+  if (dist < minDistance || dist > maxDistance) return false;
 
   // Check viewing angle
   // Step 5 关卡四：计算当前相机指向地图点向量和地图点的平均观测方向夹角，小于60°才能进入下一步。
-  cv::Mat Pn = pMP->GetNormal();
+  cv::Mat Pn = pMP->GetNormal();  // xzf：地图点的平均观测方向=mean(该点 到所有观测到它的帧的 相机光心 的向量)，之前算好的
 
-  // 计算当前相机指向地图点向量和地图点的平均观测方向夹角的余弦值，注意平均观测方向为单位向量
-  const float viewCos = PO.dot(Pn) / dist;
+  // 计算 当前相机 指向地图点向量 和 地图点的平均观测方向 夹角的余弦值，注意平均观测方向为单位向量
+  const float viewCos = PO.dot(Pn) / dist;  // xzf：确认当前帧 观测该 地图点，是 正向观测（更准） or 侧向观测
 
   //夹角要在60°范围内，否则认为观测方向太偏了，重投影不可靠，返回false
-  if (viewCos < viewingCosLimit)
-    return false;
+  if (viewCos < viewingCosLimit)  return false;
 
   // Predict scale in the image
   // Step 6 根据地图点到光心的距离来预测一个尺度（仿照特征点金字塔层级）

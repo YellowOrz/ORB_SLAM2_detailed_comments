@@ -75,6 +75,7 @@ class ORBmatcher {
    * @param[in] vpMapPoints               局部地图点，来自局部关键帧
    * @param[in] th                        搜索范围
    * @return int                          成功匹配的数目
+   * @note                                用于局部地图跟踪
    */
   int SearchByProjection(Frame &F, const std::vector<MapPoint *> &vpMapPoints, const float th = 3);
 
@@ -95,6 +96,7 @@ class ORBmatcher {
    * @param[in] th                    搜索范围阈值，默认单目为7，双目15
    * @param[in] bMono                 是否为单目
    * @return int                      成功匹配的数量
+   * @note                            用于恒速模型
    */
   int SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono);
 
@@ -109,6 +111,7 @@ class ORBmatcher {
    * @param[in] th                //窗口大小的阈值
    * @param[in] ORBdist           //描述子最小距离阈值
    * @return int                  //匹配到的点的数目
+   * @note                            用于重定位
    */
   int SearchByProjection(Frame &CurrentFrame,
                          KeyFrame *pKF,
@@ -127,6 +130,7 @@ class ORBmatcher {
    * @param[in] vpMatched         已经得到的空间点和关键帧上点的匹配关系
    * @param[in] th                搜索窗口的阈值
    * @return int                  匹配的特征点数目
+   * @note                        用于回环检测
    */
   int SearchByProjection(KeyFrame *pKF,
                          cv::Mat Scw,

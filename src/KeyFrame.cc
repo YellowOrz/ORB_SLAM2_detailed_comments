@@ -335,19 +335,12 @@ int KeyFrame::TrackedMapPoints(const int &minObs) {
   // N是当前帧中特征点的个数
   for (int i = 0; i < N; i++) {
     MapPoint *pMP = mvpMapPoints[i];
-    if (pMP)     //没有被删除
-    {
-      if (!pMP->isBad())   //并且不是坏点
-      {
-        if (bCheckObs) {
-          // 满足输入阈值要求的地图点计数加1
-          if (mvpMapPoints[i]->Observations() >= minObs)
-            nPoints++;
-        } else
-          nPoints++; //!bug
-      }
-    }
-  }
+    if (pMP){     //没有被删除
+      if (!pMP->isBad()){   //并且不是坏点
+        if (bCheckObs) {    // 满足输入阈值要求的地图点计数加1
+          if (mvpMapPoints[i]->Observations() >= minObs)  nPoints++;
+        } else  nPoints++; //!bug
+  } } }
 
   return nPoints;
 }
@@ -391,31 +384,25 @@ void KeyFrame::UpdateConnections() {
   for (vector<MapPoint *>::iterator vit = vpMP.begin(), vend = vpMP.end(); vit != vend; vit++) {
     MapPoint *pMP = *vit;
 
-    if (!pMP)
-      continue;
-
-    if (pMP->isBad())
-      continue;
+    if (!pMP) continue;
+    if (pMP->isBad()) continue;
 
     // 对于每一个地图点，observations记录了可以观测到该地图点的所有关键帧
     map<KeyFrame *, size_t> observations = pMP->GetObservations();
 
     for (map<KeyFrame *, size_t>::iterator mit = observations.begin(), mend = observations.end(); mit != mend; mit++) {
       // 除去自身，自己与自己不算共视
-      if (mit->first->mnId == mnId)
-        continue;
+      if (mit->first->mnId == mnId) continue;
       // 这里的操作非常精彩！
       // map[key] = value，当要插入的键存在时，会覆盖键对应的原来的值。如果键不存在，则添加一组键值对
       // mit->first 是地图点看到的关键帧，同一个关键帧看到的地图点会累加到该关键帧计数
       // 所以最后KFcounter 第一个参数表示某个关键帧，第2个参数表示该关键帧看到了多少当前帧的地图点，也就是共视程度
       KFcounter[mit->first]++;
-    }
-  }
+  } }
 
   // This should not happen
   // 没有共视关系，直接退出
-  if (KFcounter.empty())
-    return;
+  if (KFcounter.empty())  return;
 
   // If the counter is greater than threshold add connection
   // In case no keyframe counter is over threshold add the one with maximum counter
@@ -435,18 +422,17 @@ void KeyFrame::UpdateConnections() {
       pKFmax = mit->first;
     }
 
-    // 建立共视关系至少需要大于等于th个共视地图点
+    // 建立 共视关系 至少需要大于等于th个共视地图点
     if (mit->second >= th) {
-      // 对应权重需要大于阈值，对这些关键帧建立连接
+      // 对应权重需要大于阈值，对这些 关键帧 建立连接
       vPairs.push_back(make_pair(mit->second, mit->first));
       // 对方关键帧也要添加这个信息
       // 更新KFcounter中该关键帧的mConnectedKeyFrameWeights
       // 更新其它KeyFrame的mConnectedKeyFrameWeights，更新其它关键帧与当前帧的连接权重
       (mit->first)->AddConnection(this, mit->second);
-    }
-  }
+  } }
 
-  //  Step 3 如果没有超过阈值的权重，则对权重最大的关键帧建立连接
+  //  Step 3 如果没有超过阈值的权重，则对权重最大的关键帧建立连接   xzf：这个连接比较弱
   if (vPairs.empty()) {
     // 如果每个关键帧与它共视的关键帧的个数都少于th，
     // 那就只更新与其它关键帧共视程度最高的关键帧的mConnectedKeyFrameWeights
@@ -486,9 +472,7 @@ void KeyFrame::UpdateConnections() {
       // 建立双向连接关系，将当前关键帧作为其子关键帧
       mpParent->AddChild(this);
       mbFirstConnection = false;
-    }
-  }
-}
+} } }
 
 // 添加子关键帧（即和子关键帧具有最大共视关系的关键帧就是当前关键帧）
 void KeyFrame::AddChild(KeyFrame *pKF) {

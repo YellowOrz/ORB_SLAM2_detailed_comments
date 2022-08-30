@@ -49,21 +49,19 @@ MapDrawer::MapDrawer(Map *pMap, const string &strSettingPath) : mpMap(pMap) {
   mPointSize = fSettings["Viewer.PointSize"];
   mCameraSize = fSettings["Viewer.CameraSize"];
   mCameraLineWidth = fSettings["Viewer.CameraLineWidth"];
-
 }
 
 void MapDrawer::DrawMapPoints() {
   //取出所有的地图点
   const vector<MapPoint *> &vpMPs = mpMap->GetAllMapPoints();
-  //取出mvpReferenceMapPoints，也即局部地图d点
+  //取出mvpReferenceMapPoints，也即局部地图点
   const vector<MapPoint *> &vpRefMPs = mpMap->GetReferenceMapPoints();
 
   //将vpRefMPs从vector容器类型转化为set容器类型，便于使用set::count快速统计 - 我觉得称之为"重新构造"可能更加合适一些
   //补充, set::count用于返回集合中为某个值的元素的个数
   set < MapPoint * > spRefMPs(vpRefMPs.begin(), vpRefMPs.end());
 
-  if (vpMPs.empty())
-    return;
+  if (vpMPs.empty())  return;
 
   // for AllMapPoints
   //显示所有的地图点（不包括局部地图点），大小为2个像素，黑色
@@ -73,8 +71,7 @@ void MapDrawer::DrawMapPoints() {
 
   for (size_t i = 0, iend = vpMPs.size(); i < iend; i++) {
     // 不包括ReferenceMapPoints（局部地图点）
-    if (vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
-      continue;
+    if (vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))  continue;
     cv::Mat pos = vpMPs[i]->GetWorldPos();
     glVertex3f(pos.at<float>(0), pos.at<float>(1), pos.at<float>(2));
   }
@@ -84,14 +81,12 @@ void MapDrawer::DrawMapPoints() {
   //显示局部地图点，大小为2个像素，红色
   glPointSize(mPointSize);
   glBegin(GL_POINTS);
-  glColor3f(1.0, 0.0, 0.0);
+  glColor3f(1.0, 0.0, 0.0);       // xzf：红色
 
   for (set<MapPoint *>::iterator sit = spRefMPs.begin(), send = spRefMPs.end(); sit != send; sit++) {
-    if ((*sit)->isBad())
-      continue;
+    if ((*sit)->isBad())  continue;
     cv::Mat pos = (*sit)->GetWorldPos();
     glVertex3f(pos.at<float>(0), pos.at<float>(1), pos.at<float>(2));
-
   }
   glEnd();
 }

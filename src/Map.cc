@@ -97,7 +97,7 @@ void Map::EraseKeyFrame(KeyFrame *pKF) {
 // 设置参考地图点用于绘图显示局部地图点（红色）
 void Map::SetReferenceMapPoints(const vector<MapPoint *> &vpMPs) {
   unique_lock<mutex> lock(mMutexMap);
-  mvpReferenceMapPoints = vpMPs;
+  mvpReferenceMapPoints = vpMPs;  // xzf: mvpReferenceMapPoints是局部地图点
 }
 
 //REVIEW 这个好像没有用到
