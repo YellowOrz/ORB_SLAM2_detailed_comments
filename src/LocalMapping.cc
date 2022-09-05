@@ -42,7 +42,7 @@ namespace ORB_SLAM2 {
 LocalMapping::LocalMapping(Map *pMap, const float bMonocular) :
     mbMonocular(bMonocular), mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(pMap),
     mbAbortBA(false), mbStopped(false), mbStopRequested(false), mbNotStop(false), mbAcceptKeyFrames(true) {
-  /*
+  /*  xzf：以下标志位用于线程之间的调度
    * mbStopRequested：    外部线程调用，为true，表示外部线程请求停止 local mapping
    * mbStopped：          为true表示可以并终止localmapping 线程
    * mbNotStop：          true，表示不要停止 localmapping 线程，因为要插入关键帧了。需要和 mbStopped 结合使用
@@ -88,7 +88,7 @@ void LocalMapping::Run() {
       MapPointCulling();
 
       // Triangulate new MapPoints
-      // Step 4 当前关键帧与相邻关键帧通过三角化产生新的地图点，使得跟踪更稳
+      // Step 4 当前关键帧与相邻关键帧通过三角化产生新的地图点，使得跟踪更稳    xzf：不然地图点越来越少，因为都被剔除了
       CreateNewMapPoints();
 
       // 已经处理完队列中的最后的一个关键帧
@@ -115,7 +115,7 @@ void LocalMapping::Run() {
       }
 
       // Step 8 将当前帧加入到闭环检测队列中
-      // 注意这里的关键帧被设置成为了bad的情况,这个需要注意
+      // 注意这里的关键帧被设置成为了bad的情况,这个需要注意    xzf：在哪儿设置成bad了？
       mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
     }
     else if (Stop()){     // 当要终止当前线程的时候
@@ -123,7 +123,7 @@ void LocalMapping::Run() {
       while (isStopped() && !CheckFinish())
         // 如果还没有结束利索,那么等
         // usleep(3000);
-        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        std::this_thread::sleep_for(std::chrono::milliseconds(3));  // xzf:等3ms
 
       // 然后确定终止了就跳出这个线程的主循环
       if (CheckFinish())  break;
@@ -133,10 +133,10 @@ void LocalMapping::Run() {
     ResetIfRequested();
 
     // Tracking will see that Local Mapping is not busy
-    SetAcceptKeyFrames(true);
+    SetAcceptKeyFrames(true);   // xzf：接收tracking送过来的关键帧
 
     // 如果当前线程已经结束了就跳出主循环
-    if (CheckFinish())  break;
+    if (CheckFinish())  break;  // xzf：break后怎么
 
     //usleep(3000);
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
@@ -785,8 +785,7 @@ void LocalMapping::KeyFrameCulling() {
   for (vector<KeyFrame *>::iterator vit = vpLocalKeyFrames.begin(), vend = vpLocalKeyFrames.end(); vit != vend; vit++) {
     KeyFrame *pKF = *vit;
     // 第1个关键帧不能删除，跳过
-    if (pKF->mnId == 0)
-      continue;
+    if (pKF->mnId == 0) continue;
     // Step 2：提取每个共视关键帧的地图点
     const vector<MapPoint *> vpMapPoints = pKF->GetMapPointMatches();
 
@@ -803,12 +802,10 @@ void LocalMapping::KeyFrameCulling() {
     for (size_t i = 0, iend = vpMapPoints.size(); i < iend; i++) {
       MapPoint *pMP = vpMapPoints[i];
       if (pMP) {
-        if (!pMP->isBad()) {
-          if (!mbMonocular) {
+        if (!pMP->isBad()) {  // xzf：必须有效
+          if (!mbMonocular)
             // 对于双目或RGB-D，仅考虑近处（不超过基线的40倍 ）的地图点
-            if (pKF->mvDepth[i] > pKF->mThDepth || pKF->mvDepth[i] < 0)
-              continue;
-          }
+            if (pKF->mvDepth[i] > pKF->mThDepth || pKF->mvDepth[i] < 0) continue; // xzf：太远的，不可靠，跳过
 
           nMPs++;
           // pMP->Observations() 是观测到该地图点的相机总数目（单目1，双目2）
@@ -822,31 +819,22 @@ void LocalMapping::KeyFrameCulling() {
             for (map<KeyFrame *, size_t>::const_iterator mit = observations.begin(), mend = observations.end();
                  mit != mend; mit++) {
               KeyFrame *pKFi = mit->first;
-              if (pKFi == pKF)
-                continue;
+              if (pKFi == pKF)  continue;   // xzf：不能跟当前帧重复
               const int &scaleLeveli = pKFi->mvKeysUn[mit->second].octave;
 
               // 尺度约束：为什么pKF 尺度+1 要大于等于 pKFi 尺度？
-              // 回答：因为同样或更低金字塔层级的地图点更准确
+              // 回答：因为同样或更低金字塔层级的地图点更准确   // xzf：因为要删关键帧，所以比较谨慎
               if (scaleLeveli <= scaleLevel + 1) {
                 nObs++;
                 // 已经找到3个满足条件的关键帧，就停止不找了
-                if (nObs >= thObs)
-                  break;
-              }
-            }
+                if (nObs >= thObs)  break;
+            } }
             // 地图点至少被3个关键帧观测到，就记录为冗余点，更新冗余点计数数目
-            if (nObs >= thObs) {
-              nRedundantObservations++;
-            }
-          }
-        }
-      }
-    }
+            if (nObs >= thObs)  nRedundantObservations++;
+  } } } }
 
     // Step 4：如果该关键帧90%以上的有效地图点被判断为冗余的，则认为该关键帧是冗余的，需要删除该关键帧
-    if (nRedundantObservations > 0.9 * nMPs)
-      pKF->SetBadFlag();
+    if (nRedundantObservations > 0.9 * nMPs)  pKF->SetBadFlag();
   }
 }
 

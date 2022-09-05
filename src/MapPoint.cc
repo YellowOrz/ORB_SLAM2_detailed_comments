@@ -548,8 +548,7 @@ int MapPoint::PredictScale(const float &currentDist, KeyFrame *pKF) {
 
   // 取对数
   int nScale = ceil(log(ratio) / pKF->mfLogScaleFactor);
-  if (nScale < 0)
-    nScale = 0;
+  if (nScale < 0) nScale = 0;
   else if (nScale >= pKF->mnScaleLevels)
     nScale = pKF->mnScaleLevels - 1;
 

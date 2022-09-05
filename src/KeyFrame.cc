@@ -384,7 +384,7 @@ void KeyFrame::UpdateConnections() {
   for (vector<MapPoint *>::iterator vit = vpMP.begin(), vend = vpMP.end(); vit != vend; vit++) {
     MapPoint *pMP = *vit;
 
-    if (!pMP) continue;
+    if (!pMP)         continue;
     if (pMP->isBad()) continue;
 
     // 对于每一个地图点，observations记录了可以观测到该地图点的所有关键帧
@@ -422,7 +422,7 @@ void KeyFrame::UpdateConnections() {
       pKFmax = mit->first;
     }
 
-    // 建立 共视关系 至少需要大于等于th个共视地图点
+    // 建立 共视关系 至少需要大于等于th个共视地图点     xzf：这里会与 loop closing的候选关键帧建立edge吗？
     if (mit->second >= th) {
       // 对应权重需要大于阈值，对这些 关键帧 建立连接
       vPairs.push_back(make_pair(mit->second, mit->first));
@@ -540,15 +540,13 @@ void KeyFrame::SetErase() {
     unique_lock<mutex> lock(mMutexConnections);
 
     // 如果当前关键帧和其他的关键帧没有形成回环关系,那么就删吧
-    if (mspLoopEdges.empty()) {
+    if (mspLoopEdges.empty())
       mbNotErase = false;
-    }
   }
 
-  // mbToBeErased：删除之前记录的想要删但时机不合适没有删除的帧
-  if (mbToBeErased) {
+  // mbToBeErased：删除之前记录的想要删但时机不合适没有删除的帧  xzf：见下面的SetBadFlag()
+  if (mbToBeErased)
     SetBadFlag();
-  }
 }
 
 /**
@@ -565,10 +563,9 @@ void KeyFrame::SetBadFlag() {
     unique_lock<mutex> lock(mMutexConnections);
 
     // 第0关键帧不允许被删除
-    if (mnId == 0)
-      return;
+    if (mnId == 0)  return;
     else if (mbNotErase) {
-      // mbNotErase表示不应该删除，于是把mbToBeErased置为true，假装已经删除，其实没有删除
+      // mbNotErase表示不应该删除，于是把mbToBeErased置为true，假装已经删除，其实没有删除  xzf: 有可能其他地方（比如sim3）在使用这帧
       mbToBeErased = true;
       return;
     }

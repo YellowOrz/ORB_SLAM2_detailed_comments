@@ -83,17 +83,14 @@ void LoopClosing::Run() {
     // Loopclosing中的关键帧是LocalMapping发送过来的，LocalMapping是Tracking中发过来的
     // 在LocalMapping中通过 InsertKeyFrame 将关键帧插入闭环检测队列mlpLoopKeyFrameQueue
     // Step 1 查看闭环检测队列mlpLoopKeyFrameQueue中有没有关键帧进来
-    if (CheckNewKeyFrames()) {
+    if (CheckNewKeyFrames())
       // Detect loop candidates and check covisibility consistency
-      if (DetectLoop()) {
+      if (DetectLoop())
         // Compute similarity transformation [sR|t]
         // In the stereo/RGBD case s=1
-        if (ComputeSim3()) {
+        if (ComputeSim3())
           // Perform loop fusion and pose graph optimization
           CorrectLoop();
-        }
-      }
-    }
 
     // 查看是否有外部线程请求复位当前线程
     ResetIfRequested();
@@ -104,7 +101,6 @@ void LoopClosing::Run() {
 
     //usleep(5000);
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
   }
 
   // 运行到这里说明有外部线程请求终止当前线程,在这个函数中执行终止当前线程的一些操作
@@ -115,8 +111,7 @@ void LoopClosing::Run() {
 void LoopClosing::InsertKeyFrame(KeyFrame *pKF) {
   unique_lock<mutex> lock(mMutexLoopQueue);
   // 注意：这里第0个关键帧不能够参与到回环检测的过程中,因为第0关键帧定义了整个地图的世界坐标系
-  if (pKF->mnId != 0)
-    mlpLoopKeyFrameQueue.push_back(pKF);
+  if (pKF->mnId != 0) mlpLoopKeyFrameQueue.push_back(pKF);
 }
 
 /*
@@ -144,7 +139,7 @@ bool LoopClosing::DetectLoop() {
     mlpLoopKeyFrameQueue.pop_front();
     // Avoid that a keyframe can be erased while it is being process by this thread
     // 设置当前关键帧不要在优化的过程中被删除
-    mpCurrentKF->SetNotErase();
+    mpCurrentKF->SetNotErase();   // xzf：因为后面要用？
   }
 
   //If the map contains less than 10 KF or less than 10 KF have passed from last loop detection
@@ -165,14 +160,12 @@ bool LoopClosing::DetectLoop() {
   float minScore = 1;
   for (size_t i = 0; i < vpConnectedKeyFrames.size(); i++) {
     KeyFrame *pKF = vpConnectedKeyFrames[i];
-    if (pKF->isBad())
-      continue;
+    if (pKF->isBad()) continue;
     const DBoW2::BowVector &BowVec = pKF->mBowVec;
     // 计算两个关键帧的相似度得分；得分越低,相似度越低
     float score = mpORBVocabulary->score(CurrentBowVec, BowVec);
     // 更新最低得分
-    if (score < minScore)
-      minScore = score;
+    if (score < minScore) minScore = score;
   }
 
   // Query the database imposing the minimum score
@@ -255,8 +248,7 @@ bool LoopClosing::DetectLoop() {
           // 该“子候选组”至少与一个”子连续组“相连，跳出循环
           bConsistentForSomeGroup = true;
           break;
-        }
-      }
+      } }
 
       if (bConsistent) {
         // Step 5.5：如果判定为连续，接下来判断是否达到连续的条件
@@ -289,9 +281,7 @@ bool LoopClosing::DetectLoop() {
           // ? 这里可以break掉结束当前for循环吗？
           // 回答：不行。因为虽然pCandidateKF达到了连续性要求
           // 但spCandidateGroup 还可以和mvConsistentGroups 中其他的子连续组进行连接
-        }
-      }
-    }
+    } } }
 
     // If the group is not consistent with any previous group insert with consistency counter set to zero
     // Step 5.6：如果该“子候选组”的所有关键帧都和上次闭环无关（不连续），vCurrentConsistentGroups 没有新添加连续关系
@@ -299,13 +289,11 @@ bool LoopClosing::DetectLoop() {
     if (!bConsistentForSomeGroup) {
       ConsistentGroup cg = make_pair(spCandidateGroup, 0);
       vCurrentConsistentGroups.push_back(cg);
-    }
-  }// 遍历得到的初级的候选关键帧
+  } }// 遍历得到的初级的候选关键帧
 
   // Update Covisibility Consistent Groups
   // 更新连续组
   mvConsistentGroups = vCurrentConsistentGroups;
-
 
   // Add Current Keyframe to database
   // 当前闭环检测的关键帧添加到关键帧数据库中
@@ -315,10 +303,7 @@ bool LoopClosing::DetectLoop() {
     // 未检测到闭环，返回false
     mpCurrentKF->SetErase();
     return false;
-  } else {
-    // 成功检测到闭环，返回true
-    return true;
-  }
+  } else  return true;// 成功检测到闭环，返回true
 
   // 多余的代码,执行不到
   mpCurrentKF->SetErase();
@@ -347,7 +332,7 @@ bool LoopClosing::ComputeSim3() {
 
   //  准备工作
   // For each consistent loop candidate we try to compute a Sim3
-  // 对每个（上一步得到的具有足够连续关系的）闭环候选帧都准备算一个Sim3
+  // 对每个（上一步得到的具有足够连续关系的）闭环候选帧都准备算一个Sim3    xzf：全都是关键帧
   const int nInitialCandidates = mvpEnoughConsistentCandidates.size();
 
   // We compute first ORB matches for each candidate
@@ -374,7 +359,7 @@ bool LoopClosing::ComputeSim3() {
     // Step 1.1 从筛选的闭环候选帧中取出一帧有效关键帧pKF
     KeyFrame *pKF = mvpEnoughConsistentCandidates[i];
 
-    // 避免在LocalMapping中KeyFrameCulling函数将此关键帧作为冗余帧剔除
+    // 避免在LocalMapping中KeyFrameCulling函数将此关键帧作为冗余帧剔除  xzf：保护
     pKF->SetNotErase();
 
     // 如果候选帧质量不高，直接PASS
@@ -383,10 +368,10 @@ bool LoopClosing::ComputeSim3() {
       continue;
     }
 
-    // Step 1.2 将当前帧 mpCurrentKF 与闭环候选关键帧pKF匹配
+    // Step 1.2 将当前帧 mpCurrentKF 与闭环候选关键帧pKF匹配  xzf：为啥要再次匹配？之前没有匹配过吗？
     // 通过bow加速得到 mpCurrentKF 与 pKF 之间的匹配特征点
     // vvpMapPointMatches 是匹配特征点对应的地图点,本质上来自于候选闭环帧
-    int nmatches = matcher.SearchByBoW(mpCurrentKF, pKF, vvpMapPointMatches[i]);
+    int nmatches = matcher.SearchByBoW(mpCurrentKF, pKF, vvpMapPointMatches[i]);  // xzf：缺点：可能会漏掉
 
     // 粗筛：匹配的特征点数太少，该候选帧剔除
     if (nmatches < 20) {
@@ -400,7 +385,7 @@ bool LoopClosing::ComputeSim3() {
 
       // Sim3Solver Ransac 过程置信度0.99，至少20个inliers 最多300次迭代
       pSolver->SetRansacParameters(0.99, 20, 300);
-      vpSim3Solvers[i] = pSolver;
+      vpSim3Solvers[i] = pSolver;   // xzf：深拷贝？浅拷贝？
     }
 
     // 保留的候选帧数量
@@ -414,8 +399,7 @@ bool LoopClosing::ComputeSim3() {
   while (nCandidates > 0 && !bMatch) {
     // 遍历每一个候选帧
     for (int i = 0; i < nInitialCandidates; i++) {
-      if (vbDiscarded[i])
-        continue;
+      if (vbDiscarded[i]) continue;   // xzf：丢弃
 
       KeyFrame *pKF = mvpEnoughConsistentCandidates[i];
 
@@ -433,7 +417,7 @@ bool LoopClosing::ComputeSim3() {
       Sim3Solver *pSolver = vpSim3Solvers[i];
 
       // 最多迭代5次，返回的Scm是候选帧pKF到当前帧mpCurrentKF的Sim3变换（T12）
-      cv::Mat Scm = pSolver->iterate(5, bNoMore, vbInliers, nInliers);
+      cv::Mat Scm = pSolver->iterate(5, bNoMore, vbInliers, nInliers);  // xzf：sim3solver计算
 
       // If Ransac reachs max. iterations discard keyframe
       // 总迭代次数达到最大限制还没有求出合格的Sim3变换，该候选帧剔除
@@ -447,11 +431,11 @@ bool LoopClosing::ComputeSim3() {
       if (!Scm.empty()) {
         // 取出经过Sim3Solver 后匹配点中的内点集合
         vector < MapPoint * > vpMapPointMatches(vvpMapPointMatches[i].size(), static_cast<MapPoint *>(NULL));
-        for (size_t j = 0, jend = vbInliers.size(); j < jend; j++) {
+        for (size_t j = 0, jend = vbInliers.size(); j < jend; j++)
           // 保存内点
           if (vbInliers[j])
             vpMapPointMatches[j] = vvpMapPointMatches[i][j];
-        }
+
 
         // Step 2.2 通过上面求取的Sim3变换引导关键帧匹配，弥补Step 1中的漏匹配
         // 候选帧pKF到当前帧mpCurrentKF的R（R12），t（t12），变换尺度s（s12）
@@ -490,13 +474,10 @@ bool LoopClosing::ComputeSim3() {
 
           // 只要有一个候选帧通过Sim3的求解与优化，就跳出停止对其它候选帧的判断
           break;
-        }
-      }
-    }
-  }
+  } } } }
 
   // 退出上面while循环的原因有两种,一种是求解到了bMatch置位后出的,另外一种是nCandidates耗尽为0
-  if (!bMatch) {
+  if (!bMatch) {  // xzf: 匹配失败，清空操作
     // 如果没有一个闭环匹配候选帧通过Sim3的求解与优化
     // 清空mvpEnoughConsistentCandidates，这些候选关键帧以后都不会在再参加回环检测过程了
     for (int i = 0; i < nInitialCandidates; i++)
@@ -529,37 +510,33 @@ bool LoopClosing::ComputeSim3() {
         // mnLoopPointForKF 用于标记，避免重复添加
         if (!pMP->isBad() && pMP->mnLoopPointForKF != mpCurrentKF->mnId) {
           mvpLoopMapPoints.push_back(pMP);
-          // 标记一下
+          // 标记一下 xzf: 防止重复
           pMP->mnLoopPointForKF = mpCurrentKF->mnId;
-        }
-      }
-    }
-  }
+  } } } }
 
   // Find more matches projecting with the computed Sim3
-  // Step 4：将闭环关键帧及其连接关键帧的所有地图点投影到当前关键帧进行投影匹配
+  // Step 4：将闭环关键帧 及其连接关键帧 的所有地图点 投影到 当前关键帧 进行投影匹配  xzf：为了增加更多的匹配关系
   // 根据投影查找更多的匹配（成功的闭环匹配需要满足足够多的匹配特征点数）
   // 根据Sim3变换，将每个mvpLoopMapPoints投影到mpCurrentKF上，搜索新的匹配对
-  // mvpCurrentMatchedPoints是前面经过SearchBySim3得到的已经匹配的点对，这里就忽略不再匹配了
+  // mvpCurrentMatchedPoints是前面经过SearchBySim3得到的已经匹配的点对，这里就忽略不再匹配了  xzf：注意不要重复搜索
   // 搜索范围系数为10
   matcher.SearchByProjection(mpCurrentKF, mScw, mvpLoopMapPoints, mvpCurrentMatchedPoints, 10);
 
   // If enough matches accept Loop
   // Step 5: 统计当前帧与闭环关键帧的匹配地图点数目，超过40个说明成功闭环，否则失败
   int nTotalMatches = 0;
-  for (size_t i = 0; i < mvpCurrentMatchedPoints.size(); i++) {
+  for (size_t i = 0; i < mvpCurrentMatchedPoints.size(); i++)
     if (mvpCurrentMatchedPoints[i])
       nTotalMatches++;
-  }
 
   if (nTotalMatches >= 40) {
-    // 如果当前回环可靠,保留当前待闭环关键帧，其他闭环候选全部删掉以后不用了
+    // 如果当前回环可靠,保留 当前待闭环关键帧，其他闭环候选 全部删掉 以后不用了
     for (int i = 0; i < nInitialCandidates; i++)
       if (mvpEnoughConsistentCandidates[i] != mpMatchedKF)
         mvpEnoughConsistentCandidates[i]->SetErase();
     return true;
   } else {
-    // 闭环不可靠，闭环候选及当前待闭环帧全部删除
+    // 闭环不可靠，闭环候选及当前待闭环帧 全部删除 xzf：是从候选序列中删掉？还是去除 关键帧 的名头？
     for (int i = 0; i < nInitialCandidates; i++)
       mvpEnoughConsistentCandidates[i]->SetErase();
     mpCurrentKF->SetErase();
@@ -588,8 +565,8 @@ void LoopClosing::CorrectLoop() {
   // Step 7：添加当前帧与闭环匹配帧之间的边（这个连接关系不优化）
   // Step 8：新建一个线程用于全局BA优化
 
-  // g2oSic： 当前关键帧 mpCurrentKF 到其共视关键帧 pKFi 的Sim3 相对变换
-  // mg2oScw: 世界坐标系到当前关键帧的 Sim3 变换
+  // g2oSic： 当前关键帧 mpCurrentKF 到其共视关键帧 pKFi 的Sim3 相对变换  xzf: c->i
+  // mg2oScw: 世界坐标系到当前关键帧的 Sim3 变换                        xzf: w->c
   // g2oCorrectedSiw：世界坐标系到当前关键帧共视关键帧的Sim3 变换
 
   // Send a stop signal to Local Mapping
@@ -608,14 +585,12 @@ void LoopClosing::CorrectLoop() {
       // 停止全局BA线程
       mpThreadGBA->detach();
       delete mpThreadGBA;
-    }
-  }
+  } }
 
   // Wait until Local Mapping has effectively stopped
   // 一直等到局部地图线程结束再继续
-  while (!mpLocalMapper->isStopped()) {
+  while (!mpLocalMapper->isStopped())
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
 
   // Ensure current keyframe is updated
   // Step 1：根据共视关系更新当前关键帧与其它关键帧之间的连接关系
@@ -650,16 +625,15 @@ void LoopClosing::CorrectLoop() {
     for (vector<KeyFrame *>::iterator vit = mvpCurrentConnectedKFs.begin(), vend = mvpCurrentConnectedKFs.end();
          vit != vend; vit++) {
       KeyFrame *pKFi = *vit;
-      cv::Mat Tiw = pKFi->GetPose();
-      if (pKFi != mpCurrentKF)      //跳过当前关键帧，因为当前关键帧的位姿已经在前面优化过了，在这里是参考基准
-      {
+      cv::Mat Tiw = pKFi->GetPose();  // xzf: i表示现在遍历的关键帧（不遍历当前关键镇）
+      if (pKFi != mpCurrentKF) {     //跳过当前关键帧，因为当前关键帧的位姿已经在前面优化过了，在这里是参考基准
         // 得到当前关键帧 mpCurrentKF 到其共视关键帧 pKFi 的相对变换
         cv::Mat Tic = Tiw * Twc;
         cv::Mat Ric = Tic.rowRange(0, 3).colRange(0, 3);
         cv::Mat tic = Tic.rowRange(0, 3).col(3);
 
         // g2oSic：当前关键帧 mpCurrentKF 到其共视关键帧 pKFi 的Sim3 相对变换
-        // 这里是non-correct, 所以scale=1.0
+        // 这里是non-correct, 所以scale=1.0    xzf：认为共视区域（离得很近）中 无尺度漂移
         g2o::Sim3 g2oSic(Converter::toMatrix3d(Ric), Converter::toVector3d(tic), 1.0);
         // 当前帧的位姿固定不动，其它的关键帧根据相对关系得到Sim3调整的位姿
         g2o::Sim3 g2oCorrectedSiw = g2oSic * mg2oScw;
@@ -873,14 +847,11 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap) {
     // Step 3 遍历闭环帧组的所有的地图点，替换掉需要替换的地图点
     for (int i = 0; i < nLP; i++) {
       MapPoint *pRep = vpReplacePoints[i];
-      if (pRep) {
+      if (pRep)
         // 如果记录了需要替换的地图点
         // 用mvpLoopMapPoints替换掉vpReplacePoints里记录的要替换的地图点
         pRep->Replace(mvpLoopMapPoints[i]);
-      }
-    }
-  }
-}
+} } }
 
 // 由外部线程调用,请求复位当前线程
 void LoopClosing::RequestReset() {

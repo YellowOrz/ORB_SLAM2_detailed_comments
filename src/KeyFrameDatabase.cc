@@ -133,26 +133,21 @@ vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float m
             // 没有共视就标记作为闭环候选关键帧，放到lKFsSharingWords里
             pKFi->mnLoopQuery = pKF->mnId;
             lKFsSharingWords.push_back(pKFi);
-          }
-        }
+        } }
         pKFi->mnLoopWords++;// 记录pKFi与pKF具有相同word的个数
-      }
-    }
-  }
+  } } }
 
   // 如果没有关键帧和这个关键帧具有相同的单词,那么就返回空
-  if (lKFsSharingWords.empty())
-    return vector<KeyFrame *>();
+  if (lKFsSharingWords.empty()) return vector<KeyFrame *>();
 
   list<pair<float, KeyFrame *> > lScoreAndMatch;
 
   // Only compare against those keyframes that share enough words
   // Step 2：统计上述所有闭环候选帧中与当前帧具有共同单词最多的单词数，用来决定相对阈值
   int maxCommonWords = 0;
-  for (list<KeyFrame *>::iterator lit = lKFsSharingWords.begin(), lend = lKFsSharingWords.end(); lit != lend; lit++) {
+  for (list<KeyFrame *>::iterator lit = lKFsSharingWords.begin(), lend = lKFsSharingWords.end(); lit != lend; lit++)
     if ((*lit)->mnLoopWords > maxCommonWords)
       maxCommonWords = (*lit)->mnLoopWords;
-  }
 
   // 确定最小公共单词数为最大公共单词数目的0.8倍
   int minCommonWords = maxCommonWords * 0.8f;
@@ -172,23 +167,20 @@ vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float m
       float si = mpVoc->score(pKF->mBowVec, pKFi->mBowVec);
 
       pKFi->mLoopScore = si;
-      if (si >= minScore)
-        lScoreAndMatch.push_back(make_pair(si, pKFi));
-    }
-  }
+      if (si >= minScore) lScoreAndMatch.push_back(make_pair(si, pKFi));  // xzf：共视单词数&相似度都>阈值
+  } }
 
   // 如果没有超过指定相似度阈值的，那么也就直接跳过去
-  if (lScoreAndMatch.empty())
-    return vector<KeyFrame *>();
+  if (lScoreAndMatch.empty()) return vector<KeyFrame *>();
 
   list<pair<float, KeyFrame *> > lAccScoreAndMatch;
   float bestAccScore = minScore;
 
   // Lets now accumulate score by covisibility
   // 单单计算当前帧和某一关键帧的相似性是不够的，这里将与关键帧相连（权值最高，共视程度最高）的前十个关键帧归为一组，计算累计得分
-  // Step 4：计算上述候选帧对应的共视关键帧组的总得分，得到最高组得分bestAccScore，并以此决定阈值minScoreToRetain
+  // Step 4：计算上述候选帧对应的共视关键帧组的总得分，得到最高组得分bestAccScore，并以此决定阈值minScoreToRetain  xzf：为了更加鲁棒
   for (list<pair<float, KeyFrame *> >::iterator it = lScoreAndMatch.begin(), itend = lScoreAndMatch.end(); it != itend;
-       it++) {
+       it++) {  // xzf：当前帧 除了要和某一候选关键帧 相似，还要跟 它的邻居们相似
     KeyFrame *pKFi = it->second;
     vector<KeyFrame *> vpNeighs = pKFi->GetBestCovisibilityKeyFrames(10);
 
@@ -205,14 +197,11 @@ vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float m
         if (pKF2->mLoopScore > bestScore) {
           pBestKF = pKF2;
           bestScore = pKF2->mLoopScore;
-        }
-      }
-    }
+    } } }
 
     lAccScoreAndMatch.push_back(make_pair(accScore, pBestKF));
     // 记录所有组中组得分最高的组，用于确定相对阈值
-    if (accScore > bestAccScore)
-      bestAccScore = accScore;
+    if (accScore > bestAccScore)  bestAccScore = accScore;
   }
 
   // Return all those keyframes with a score higher than 0.75*bestScore
@@ -232,9 +221,7 @@ vector<KeyFrame *> KeyFrameDatabase::DetectLoopCandidates(KeyFrame *pKF, float m
       if (!spAlreadyAddedKF.count(pKFi)) {
         vpLoopCandidates.push_back(pKFi);
         spAlreadyAddedKF.insert(pKFi);
-      }
-    }
-  }
+  } } }
 
   return vpLoopCandidates;
 }
