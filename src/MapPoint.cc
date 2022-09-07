@@ -147,8 +147,7 @@ void MapPoint::AddObservation(KeyFrame *pKF, size_t idx) {
   unique_lock<mutex> lock(mMutexFeatures);
   // mObservations:观测到该MapPoint的关键帧KF和该MapPoint在KF中的索引
   // 如果已经添加过观测，返回
-  if (mObservations.count(pKF))
-    return;
+  if (mObservations.count(pKF)) return;
   // 如果没有添加过观测，记录下能观测到该MapPoint的KF和该MapPoint在KF中的索引
   mObservations[pKF] = idx;
 
@@ -352,8 +351,7 @@ void MapPoint::ComputeDistinctiveDescriptors() {
     observations = mObservations;
   }
 
-  if (observations.empty())
-    return;
+  if (observations.empty()) return;
 
   vDescriptors.reserve(observations.size());
 
@@ -368,8 +366,7 @@ void MapPoint::ComputeDistinctiveDescriptors() {
       vDescriptors.push_back(pKF->mDescriptors.row(mit->second));
   }
 
-  if (vDescriptors.empty())
-    return;
+  if (vDescriptors.empty()) return;
 
   // Compute distances between them
   // Step 3 计算这些描述子两两之间的距离
@@ -388,8 +385,7 @@ void MapPoint::ComputeDistinctiveDescriptors() {
       int distij = ORBmatcher::DescriptorDistance(vDescriptors[i], vDescriptors[j]);
       Distances[i][j] = distij;
       Distances[j][i] = distij;
-    }
-  }
+  } }
 
   // Take the descriptor with least median distance to the rest
   // Step 4 选择最有代表性的描述子，它与其他描述子应该具有最小的距离中值
@@ -408,14 +404,12 @@ void MapPoint::ComputeDistinctiveDescriptors() {
     if (median < BestMedian) {
       BestMedian = median;
       BestIdx = i;
-    }
-  }
+  } }
 
   {
     unique_lock<mutex> lock(mMutexFeatures);
     mDescriptor = vDescriptors[BestIdx].clone();
-  }
-}
+} }
 
 // 获取当前地图点的描述子
 cv::Mat MapPoint::GetDescriptor() {

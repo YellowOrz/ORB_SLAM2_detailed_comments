@@ -972,8 +972,7 @@ void Tracking::CreateInitialMapMonocular() {
     if (vpAllMapPoints[iMP]) {
       MapPoint *pMP = vpAllMapPoints[iMP];
       pMP->SetWorldPos(pMP->GetWorldPos() * invMedianDepth);
-    }
-  }
+  } }
 
   //  Step 8 将关键帧插入局部地图，更新归一化后的位姿、局部地图点
   mpLocalMapper->InsertKeyFrame(pKFini);

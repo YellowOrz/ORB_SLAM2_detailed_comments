@@ -1127,7 +1127,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
 }
 
 /**
- * @brief 闭环矫正中使用。将当前关键帧闭环匹配上的关键帧及其共视关键帧组成的地图点投影到当前关键帧，融合地图点
+ * @brief 闭环矫正中使用。将当前关键帧闭环匹配上的关键帧及其共视关键帧组成的地图点投影到当前关键帧，融合地图点        xzf：融合是指什么？？？
  *
  * @param[in] pKF                   当前关键帧
  * @param[in] Scw                   当前关键帧经过闭环Sim3 后的世界到相机坐标系的Sim变换
@@ -1170,8 +1170,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
 
     // Discard Bad MapPoints and already found
     // 地图点无效 或 已经是该帧的地图点（无需融合），跳过
-    if (pMP->isBad() || spAlreadyFound.count(pMP))
-      continue;
+    if (pMP->isBad() || spAlreadyFound.count(pMP))  continue;
 
     // Get 3D Coords.
     // Step 2 地图点变换到当前相机坐标系下
@@ -1181,8 +1180,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
     cv::Mat p3Dc = Rcw * p3Dw + tcw;
 
     // Depth must be positive
-    if (p3Dc.at<float>(2) < 0.0f)
-      continue;
+    if (p3Dc.at<float>(2) < 0.0f)   continue;
 
     // Project into Image
     // Step 3 得到地图点投影到当前帧的图像坐标
@@ -1195,8 +1193,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
 
     // Point must be inside the image
     // 投影点必须在图像范围内
-    if (!pKF->IsInImage(u, v))
-      continue;
+    if (!pKF->IsInImage(u, v))    continue;
 
     // Depth must be inside the scale pyramid of the image
     // Step 4 根据距离是否在图像合理金字塔尺度范围内和观测角度是否小于60度判断该地图点是否有效
@@ -1205,14 +1202,12 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
     cv::Mat PO = p3Dw - Ow;
     const float dist3D = cv::norm(PO);
 
-    if (dist3D < minDistance || dist3D > maxDistance)
-      continue;
+    if (dist3D < minDistance || dist3D > maxDistance)   continue;
 
     // Viewing angle must be less than 60 deg
     cv::Mat Pn = pMP->GetNormal();
 
-    if (PO.dot(Pn) < 0.5 * dist3D)
-      continue;
+    if (PO.dot(Pn) < 0.5 * dist3D)    continue;
 
     // Compute predicted scale level
     const int nPredictedLevel = pMP->PredictScale(dist3D, pKF);
@@ -1224,8 +1219,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
     // Step 5 在当前帧内搜索匹配候选点
     const vector<size_t> vIndices = pKF->GetFeaturesInArea(u, v, radius);
 
-    if (vIndices.empty())
-      continue;
+    if (vIndices.empty())   continue;
 
     // Match to the most similar keypoint in the radius
     // Step 6 寻找最佳匹配点（没有用到次佳匹配的比例）
@@ -1237,8 +1231,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
       const size_t idx = *vit;
       const int &kpLevel = pKF->mvKeysUn[idx].octave;
 
-      if (kpLevel < nPredictedLevel - 1 || kpLevel > nPredictedLevel)
-        continue;
+      if (kpLevel < nPredictedLevel - 1 || kpLevel > nPredictedLevel)   continue;   // xzf: 要求金字塔层数要相近
 
       const cv::Mat &dKF = pKF->mDescriptors.row(idx);
 
@@ -1247,26 +1240,23 @@ int ORBmatcher::Fuse(KeyFrame *pKF,
       if (dist < bestDist) {
         bestDist = dist;
         bestIdx = idx;
-      }
-    }
+    } }
 
     // If there is already a MapPoint replace otherwise add new measurement
     // Step 7 替换或新增地图点
     if (bestDist <= TH_LOW) {
       MapPoint *pMPinKF = pKF->GetMapPoint(bestIdx);
-      if (pMPinKF) {
+      if (pMPinKF) {  // xzf：替换。但是先记录，后面加锁再替换
         // 如果这个地图点已经存在，则记录要替换信息
         // 这里不能直接替换，原因是需要对地图点加锁后才能替换，否则可能会crash。所以先记录，在加锁后替换
-        if (!pMPinKF->isBad())
-          vpReplacePoint[iMP] = pMPinKF;
-      } else {
+        if (!pMPinKF->isBad())    vpReplacePoint[iMP] = pMPinKF;
+      } else {        // xzf：添加
         // 如果这个地图点不存在，直接添加
         pMP->AddObservation(pKF, bestIdx);
         pKF->AddMapPoint(pMP, bestIdx);
       }
       nFused++;
-    }
-  }
+  } }
   // 融合（替换和新增）的地图点数目
   return nFused;
 }
