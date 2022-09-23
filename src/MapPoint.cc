@@ -388,7 +388,7 @@ void MapPoint::ComputeDistinctiveDescriptors() {
   } }
 
   // Take the descriptor with least median distance to the rest
-  // Step 4 选择最有代表性的描述子，它与其他描述子应该具有最小的距离中值
+  // Step 4 选择最有 代表性 的描述子，它与其他描述子应该具有 最小的距离中值
   int BestMedian = INT_MAX;   // 记录最小的中值
   int BestIdx = 0;            // 最小中值对应的索引
   for (size_t i = 0; i < N; i++) {

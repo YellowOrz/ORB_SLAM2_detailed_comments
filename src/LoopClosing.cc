@@ -187,7 +187,7 @@ bool LoopClosing::DetectLoop() {
   // Each candidate expands a covisibility group (keyframes connected to the loop candidate in the covisibility graph)
   // A group is consistent with a previous group if they share at least a keyframe
   // We must detect a consistent loop in several consecutive keyframes to accept it
-  // Step 5：在候选帧中检测具有连续性的候选帧
+  // Step 5：在候选帧中检测具有 连续性 的候选帧
   // 1、每个候选帧将与自己相连的关键帧构成一个“子候选组spCandidateGroup”， vpCandidateKFs-->spCandidateGroup
   // 2、检测“子候选组”中每一个关键帧是否存在于“连续组”，如果存在 nCurrentConsistency++，则将该“子候选组”放入“当前连续组vCurrentConsistentGroups”
   // 3、如果nCurrentConsistency大于等于3，那么该”子候选组“代表的候选帧过关，进入mvpEnoughConsistentCandidates
@@ -253,7 +253,7 @@ bool LoopClosing::DetectLoop() {
       if (bConsistent) {
         // Step 5.5：如果判定为连续，接下来判断是否达到连续的条件
         // 取出和当前的候选组发生"连续"关系的子连续组的"已连续次数"
-        int nPreviousConsistency = mvConsistentGroups[iG].second;
+        int nPreviousConsistency = mvConsistentGroups[iG].second;   // xzf:泡泡机器人的视频说应该是i，不是iG
         // 将当前候选组连续长度在原子连续组的基础上 +1，
         int nCurrentConsistency = nPreviousConsistency + 1;
         // 如果上述连续关系还未记录到 vCurrentConsistentGroups，那么记录一下
@@ -639,7 +639,7 @@ void LoopClosing::CorrectLoop() {
         g2o::Sim3 g2oCorrectedSiw = g2oSic * mg2oScw;
         // Pose corrected with the Sim3 of the loop closure
         // 存放闭环g2o优化后当前关键帧的共视关键帧的Sim3 位姿
-        CorrectedSim3[pKFi] = g2oCorrectedSiw;
+        CorrectedSim3[pKFi] = g2oCorrectedSiw;    // xzf：CorrectedSim3是个局部变量
       }
 
       cv::Mat Riw = Tiw.rowRange(0, 3).colRange(0, 3);
@@ -663,6 +663,8 @@ void LoopClosing::CorrectLoop() {
       g2o::Sim3 g2oSiw = NonCorrectedSim3[pKFi];
 
       vector < MapPoint * > vpMPsi = pKFi->GetMapPointMatches();
+
+      // xzf：先调整mappoints，再“真正”调整位姿。因为可以剔除mappoints带来的错误连接关系
       // 遍历待矫正共视关键帧中的每一个地图点
       for (size_t iMP = 0, endMPi = vpMPsi.size(); iMP < endMPi; iMP++) {
         MapPoint *pMPi = vpMPsi[iMP];
@@ -703,13 +705,13 @@ void LoopClosing::CorrectLoop() {
       eigt *= (1. / s);
 
       cv::Mat correctedTiw = Converter::toCvSE3(eigR, eigt);
-      // 设置矫正后的新的pose
+      // 设置矫正后的新的pose   // xzf: 真正更新 关键帧位姿
       pKFi->SetPose(correctedTiw);
 
       // Make sure connections are updated
       // Step 2.4：根据共视关系更新当前帧与其它关键帧之间的连接
       // 地图点的位置改变了,可能会引起共视关系\权值的改变
-      pKFi->UpdateConnections();
+      pKFi->UpdateConnections();  // xzf：因为map points变了
     }
 
     // Start Loop Fusion
@@ -789,7 +791,7 @@ void LoopClosing::CorrectLoop() {
   mpCurrentKF->AddLoopEdge(mpMatchedKF);
 
   // Launch a new thread to perform Global Bundle Adjustment
-  // Step 8：新建一个线程用于全局BA优化
+  // Step 8：新建一个线程 用于 全局BA优化
   // OptimizeEssentialGraph只是优化了一些主要关键帧的位姿，这里进行全局BA可以全局优化所有位姿和MapPoints
   mbRunningGBA = true;
   mbFinishedGBA = false;

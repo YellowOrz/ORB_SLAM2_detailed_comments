@@ -85,16 +85,16 @@ void LocalMapping::Run() {
 
       // Check recent MapPoints
       // Step 3 根据地图点的观测情况剔除质量不好的地图点
-      MapPointCulling();
+      MapPointCulling();  // xzf：剔除 坏的
 
       // Triangulate new MapPoints
-      // Step 4 当前关键帧与相邻关键帧通过三角化产生新的地图点，使得跟踪更稳    xzf：不然地图点越来越少，因为都被剔除了
+      // Step 4 当前关键帧与相邻关键帧通过（估计得到的R和t来）三角化产生新的地图点，使得跟踪更稳    xzf：不然地图点越来越少，因为都被剔除了
       CreateNewMapPoints();
 
       // 已经处理完队列中的最后的一个关键帧
       if (!CheckNewKeyFrames())
         // Find more matches in neighbor keyframes and fuse point duplications
-        //  Step 5 检查并融合当前关键帧与相邻关键帧帧（两级相邻）中重复的地图点
+        //  Step 5 检查并 融合 当前关键帧与相邻关键帧帧（两级相邻）中重复的地图点
         SearchInNeighbors();
 
       // 终止BA的标志
@@ -102,7 +102,7 @@ void LocalMapping::Run() {
 
       // 已经处理完队列中的最后的一个关键帧，并且闭环检测没有请求停止LocalMapping
       if (!CheckNewKeyFrames() && !stopRequested()) {
-        // Local BA // xzf：BA可以随时停止
+        // Local BA // xzf：local BA可以随时停止
         // Step 6 当局部地图中的关键帧大于2个的时候进行局部地图的BA
         if (mpMap->KeyFramesInMap() > 2)
           // 注意这里的第二个参数是按地址传递的,当这里的 mbAbortBA 状态发生变化时，能够及时执行/停止BA xzf：BA优化位姿和地图点
@@ -115,7 +115,7 @@ void LocalMapping::Run() {
       }
 
       // Step 8 将当前帧加入到闭环检测队列中
-      // 注意这里的关键帧被设置成为了bad的情况,这个需要注意    xzf：在哪儿设置成bad了？
+      // 注意这里的关键帧被设置成为了bad的情况,这个需要注意    xzf：在KeyFrameCulling设置成bad了
       mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
     }
     else if (Stop()){     // 当要终止当前线程的时候
@@ -183,7 +183,7 @@ void LocalMapping::ProcessNewKeyFrame() {
   // Step 3：当前处理关键帧中有效的地图点，更新normal，描述子等信息
   // TrackLocalMap中和当前帧新匹配上的地图点和当前关键帧进行关联绑定
   const vector<MapPoint *> vpMapPointMatches = mpCurrentKeyFrame->GetMapPointMatches();
-  // 对当前处理的这个关键帧中的所有的地图点展开遍历
+  // 对当前处理的这个关键帧中的所有的地图点展开遍历  xzf：计算一些属性
   for (size_t i = 0; i < vpMapPointMatches.size(); i++) {
     MapPoint *pMP = vpMapPointMatches[i];
     if (pMP) {
@@ -202,7 +202,7 @@ void LocalMapping::ProcessNewKeyFrame() {
   } } }
 
   // Update links in the Covisibility Graph
-  // Step 4：更新关键帧间的连接关系（共视图）    xzf：很重要
+  // Step 4：更新关键帧间的连接关系（共视图）    xzf：很重要。一般来说map points大批量变动之后，都会有个这个操作。因为map point是关键帧联系的枢纽
   mpCurrentKeyFrame->UpdateConnections();
 
   // Insert Keyframe in Map
@@ -760,7 +760,7 @@ void LocalMapping::InterruptBA() {
 
 /**
  * @brief 检测当前关键帧在共视图中的关键帧，根据地图点在共视图中的冗余程度剔除该共视关键帧
- * 冗余关键帧的判定：90%以上的地图点能被其他关键帧（至少3个）观测到
+ * 冗余关键帧的判定：90%以上的地图点 能被其他关键帧（至少3个）观测到
  */
 void LocalMapping::KeyFrameCulling() {
   // Check redundant keyframes (only local keyframes)

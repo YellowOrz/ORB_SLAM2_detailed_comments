@@ -451,13 +451,13 @@ void Tracking::Track() {
           // 用最近的关键帧来跟踪当前的普通帧
           // 通过BoW的方式在参考帧中找当前帧特征点的匹配点
           // 优化每个特征点都对应3D点重投影误差即可得到位姿
-          bOK = TrackReferenceKeyFrame();
+          bOK = TrackReferenceKeyFrame();   // xzf: 参考关键帧跟踪
         else {
           // 用最近的普通帧来跟踪当前的普通帧
           // 根据恒速模型设定当前帧的初始位姿
           // 通过投影的方式在参考帧中找当前帧特征点的匹配点
           // 优化每个特征点所对应3D点的投影误差即可得到位姿
-          bOK = TrackWithMotionModel();
+          bOK = TrackWithMotionModel();     // xzf: 恒速模型跟踪
           if (!bOK)
             //根据恒速模型失败了，只能根据参考关键帧来跟踪
             bOK = TrackReferenceKeyFrame();
@@ -472,7 +472,7 @@ void Tracking::Track() {
         // mbVO是mbOnlyTracking为true时的才有的一个变量
         // mbVO为false表示此帧匹配了很多的MapPoints，跟踪很正常 (注意有点反直觉)
         // mbVO为true表明此帧匹配了很少的MapPoints，少于10个，要跪的节奏
-        if (!mbVO) {  // xzf：false是正常
+        if (!mbVO) {  // xzf：false是跟踪正常
           // Step 2.2 如果跟踪正常，使用恒速模型 或 参考关键帧跟踪
           // In last frame we tracked enough MapPoints in the map
           if (!mVelocity.empty()) {
@@ -482,7 +482,7 @@ void Tracking::Track() {
             //    bOK = TrackReferenceKeyFrame();
           } else bOK = TrackReferenceKeyFrame(); // 如果恒速模型不被满足,那么就只能够通过参考关键帧来定位
         }
-        else { // xzf：恒速模型+重定位，更相信重定位
+        else { // xzf：跟踪不正常，恒速模型+重定位，更相信重定位
           // In last frame we tracked mainly "visual odometry" points.
           // We compute two camera poses, one from motion model and one doing relocalization.
           // If relocalization is sucessfull we choose that solution, otherwise we retain
@@ -543,7 +543,8 @@ void Tracking::Track() {
     // If we have an initial estimation of the camera pose and matching. Track the local map.
     // Step 3：在跟踪得到当前帧初始姿态后，现在对local map进行跟踪得到更多的匹配，并优化当前位姿
     // 前面只是跟踪一帧得到初始位姿，这里搜索局部关键帧、局部地图点，和当前帧进行投影匹配，得到更多匹配的MapPoints后进行Pose优化
-    if (!mbOnlyTracking)  if (bOK)  bOK = TrackLocalMap();
+    if (!mbOnlyTracking)
+      if (bOK)  bOK = TrackLocalMap();
     else
       // mbVO true means that there are few matches to MapPoints in the map. We cannot retrieve
       // a local map and therefore we do not perform TrackLocalMap(). Once the system relocalizes
@@ -603,7 +604,7 @@ void Tracking::Track() {
 
       // Check if we need to insert a new keyframe
       // Step 8：检测并插入关键帧，对于双目或RGB-D会产生新的地图点
-      if (NeedNewKeyFrame())  CreateNewKeyFrame();
+      if (NeedNewKeyFrame())  CreateNewKeyFrame();  // xzf: 只是插入到关键帧数据库，不真正插入
 
       // We allow points with high innovation (considererd outliers by the Huber Function)
       // pass to the new keyframe, so that bundle adjustment will finally decide
@@ -701,7 +702,7 @@ void Tracking::StereoInitialization() {
 
         // a.表示该MapPoint可以被哪个KeyFrame的哪个特征点观测到
         pNewMP->AddObservation(pKFini, i);
-        // b.从众多观测到该MapPoint的特征点中挑选区分度最高的描述子
+        // b.从众多观测到该MapPoint的特征点中挑选 区分度最高 的描述子
         pNewMP->ComputeDistinctiveDescriptors();
         // c.更新该MapPoint平均观测方向以及观测距离的范围
         pNewMP->UpdateNormalAndDepth();
@@ -1489,9 +1490,7 @@ void Tracking::CreateNewKeyFrame() {
         // 1、当前的点的深度已经超过了设定的深度阈值（35倍基线）
         // 2、nPoints已经超过100个点，说明距离比较远了，可能不准确，停掉退出
         if (vDepthIdx[j].first > mThDepth && nPoints > 100) break;
-      }
-    }
-  }
+  } } }
 
   // Step 4：插入关键帧
   // 关键帧插入到列表 mlNewKeyFrames中，等待local mapping线程临幸

@@ -936,9 +936,7 @@ void Frame::ComputeStereoMatches() {
         if (dist < bestDist) {
           bestDist = dist;
           bestIdxR = iR;
-        }
-      }
-    }
+    } } }
 
     // Step 3. 图像块滑动窗口用SAD(Sum of absolute differences，差的绝对和)实现精确匹配.
     if (bestDist < thOrbDist) {
@@ -1017,8 +1015,7 @@ void Frame::ComputeStereoMatches() {
       }
 
       // 搜索窗口越界判断
-      if (bestincR == -L || bestincR == L)
-        continue;
+      if (bestincR == -L || bestincR == L)  continue;
 
       // Step 4. 亚像素插值, 使用最佳匹配点及其左右相邻点构成抛物线来得到最小sad的亚像素坐标
       // 使用3点拟合抛物线的方式，用极小值代替之前计算的最优是差值
@@ -1037,8 +1034,7 @@ void Frame::ComputeStereoMatches() {
       const float deltaR = (dist1 - dist3) / (2.0f * (dist1 + dist3 - 2.0f * dist2));
 
       // 亚像素精度的修正量应该是在[-1,1]之间，否则就是误匹配
-      if (deltaR < -1 || deltaR > 1)
-        continue;
+      if (deltaR < -1 || deltaR > 1)  continue;
 
       // 根据亚像素精度偏移量delta调整最佳匹配索引
       float bestuR = mvScaleFactors[kpL.octave] * ((float) scaleduR0 + (float) bestincR + deltaR);
@@ -1057,9 +1053,7 @@ void Frame::ComputeStereoMatches() {
         mvDepth[iL] = mbf / disparity;
         mvuRight[iL] = bestuR;
         vDistIdx.push_back(pair<int, int>(bestDist, iL));
-      }
-    }
-  }
+  } } }
   // Step 6. 删除离群点(outliers)
   // 块匹配相似度阈值判断，归一化sad最小，并不代表就一定是匹配的，比如光照变化、弱纹理、无纹理等同样会造成误匹配
   // 误匹配判断条件  norm_sad > 1.5 * 1.4 * median
@@ -1068,15 +1062,12 @@ void Frame::ComputeStereoMatches() {
   const float thDist = 1.5f * 1.4f * median;
 
   for (int i = vDistIdx.size() - 1; i >= 0; i--) {
-    if (vDistIdx[i].first < thDist)
-      break;
+    if (vDistIdx[i].first < thDist)   break;
     else {
       // 误匹配点置为-1，和初始化时保持一直，作为error code
       mvuRight[vDistIdx[i].second] = -1;
       mvDepth[vDistIdx[i].second] = -1;
-    }
-  }
-}
+} } }
 
 //计算RGBD图像的立体深度信息
 void Frame::ComputeStereoFromRGBD(const cv::Mat &imDepth)    //参数是深度图像

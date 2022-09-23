@@ -538,8 +538,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1,
     cv::KeyPoint kp1 = F1.mvKeysUn[i1];
     int level1 = kp1.octave;
     // 只使用原始图像上提取的特征点
-    if (level1 > 0)
-      continue;
+    if (level1 > 0)   continue;
 
     // Step 2 在半径窗口内搜索当前帧F2中所有的候选匹配特征点
     // vbPrevMatched 输入的是参考帧 F1的特征点
@@ -548,8 +547,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1,
         vIndices2 = F2.GetFeaturesInArea(vbPrevMatched[i1].x, vbPrevMatched[i1].y, windowSize, level1, level1);
 
     // 没有候选特征点，跳过
-    if (vIndices2.empty())
-      continue;
+    if (vIndices2.empty())    continue;
 
     // 取出参考帧F1中当前遍历特征点对应的描述子
     cv::Mat d1 = F1.mDescriptors.row(i1);
@@ -566,8 +564,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1,
       // 计算两个特征点描述子距离
       int dist = DescriptorDistance(d1, d2);
 
-      if (vMatchedDistance[i2] <= dist)
-        continue;
+      if (vMatchedDistance[i2] <= dist)   continue;
       // 如果当前匹配距离更小，更新最佳次佳距离
       if (dist < bestDist) {
         bestDist2 = bestDist;
@@ -575,8 +572,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1,
         bestIdx2 = i2;
       } else if (dist < bestDist2) {
         bestDist2 = dist;
-      }
-    }
+    } }
 
     // Step 4 对最优次优结果进行检查，满足阈值、最优/次优比例，删除重复匹配
     // 即使算出了最佳描述子匹配距离，也不一定保证配对成功。要小于设定阈值
@@ -609,11 +605,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1,
             bin = 0;
           assert(bin >= 0 && bin < HISTO_LENGTH);
           rotHist[bin].push_back(i1);
-        }
-      }
-    }
-
-  }
+  } } } }
 
   // Step 6 筛除旋转直方图中“非主流”部分
   if (mbCheckOrientation) {
@@ -624,19 +616,14 @@ int ORBmatcher::SearchForInitialization(Frame &F1,
     ComputeThreeMaxima(rotHist, HISTO_LENGTH, ind1, ind2, ind3);
 
     for (int i = 0; i < HISTO_LENGTH; i++) {
-      if (i == ind1 || i == ind2 || i == ind3)
-        continue;
+      if (i == ind1 || i == ind2 || i == ind3)  continue;
       // 剔除掉不在前三的匹配对，因为他们不符合“主流旋转方向”
       for (size_t j = 0, jend = rotHist[i].size(); j < jend; j++) {
         int idx1 = rotHist[i][j];
         if (vnMatches12[idx1] >= 0) {
           vnMatches12[idx1] = -1;
           nmatches--;
-        }
-      }
-    }
-
-  }
+  } } } }
 
   //Update prev matched
   // Step 7 将最后通过筛选的匹配好的特征点保存到vbPrevMatched
@@ -696,10 +683,8 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
         const size_t idx1 = f1it->second[i1];
 
         MapPoint *pMP1 = vpMapPoints1[idx1];
-        if (!pMP1)
-          continue;
-        if (pMP1->isBad())
-          continue;
+        if (!pMP1)    continue;
+        if (pMP1->isBad())    continue;
 
         const cv::Mat &d1 = Descriptors1.row(idx1);
 
@@ -714,11 +699,9 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
           MapPoint *pMP2 = vpMapPoints2[idx2];
 
           // 如果已经有匹配的点，或者遍历到的特征点对应的地图点无效
-          if (vbMatched2[idx2] || !pMP2)
-            continue;
+          if (vbMatched2[idx2] || !pMP2)    continue;
 
-          if (pMP2->isBad())
-            continue;
+          if (pMP2->isBad())    continue;
 
           const cv::Mat &d2 = Descriptors2.row(idx2);
 
@@ -730,8 +713,7 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
             bestIdx2 = idx2;
           } else if (dist < bestDist2) {
             bestDist2 = dist;
-          }
-        }
+        } }
 
         // Step 5 对匹配结果进行检查，满足阈值、最优/次优比例，记录旋转直方图信息
         if (bestDist1 < TH_LOW) {
@@ -741,8 +723,7 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
 
             if (mbCheckOrientation) {
               float rot = vKeysUn1[idx1].angle - vKeysUn2[bestIdx2].angle;
-              if (rot < 0.0)
-                rot += 360.0f;
+              if (rot < 0.0)    rot += 360.0f;
               int bin = round(rot * factor);
               if (bin == HISTO_LENGTH)
                 bin = 0;
@@ -750,18 +731,14 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
               rotHist[bin].push_back(idx1);
             }
             nmatches++;
-          }
-        }
-      }
+      } } }
 
-      f1it++;
-      f2it++;
+      f1it++; f2it++;
     } else if (f1it->first < f2it->first) {
       f1it = vFeatVec1.lower_bound(f2it->first);
     } else {
       f2it = vFeatVec2.lower_bound(f1it->first);
-    }
-  }
+  } }
 
   // Step 6 检查旋转直方图分布，剔除差异较大的匹配
   if (mbCheckOrientation) {
@@ -777,9 +754,7 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
       for (size_t j = 0, jend = rotHist[i].size(); j < jend; j++) {
         vpMatches12[rotHist[i][j]] = static_cast<MapPoint *>(NULL);
         nmatches--;
-      }
-    }
-  }
+  } } }
 
   return nmatches;
 }
@@ -936,8 +911,7 @@ int ORBmatcher::SearchForTriangulation(KeyFrame *pKF1, KeyFrame *pKF2, cv::Mat F
             rotHist[bin].push_back(idx1);
       } } }
 
-      f1it++;
-      f2it++;
+      f1it++; f2it++;
     } else if(f1it->first < f2it->first) f1it = vFeatVec1.lower_bound(f2it->first);
     else  f2it = vFeatVec2.lower_bound(f1it->first);
   }
@@ -1745,8 +1719,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame,
           if (dist < bestDist) {
             bestDist = dist;
             bestIdx2 = i2;
-          }
-        }
+        } }
 
         if (bestDist <= ORBdist) {
           CurrentFrame.mvpMapPoints[bestIdx2] = pMP;
@@ -1761,12 +1734,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame,
               bin = 0;
             assert(bin >= 0 && bin < HISTO_LENGTH);
             rotHist[bin].push_back(bestIdx2);
-          }
-        }
-
-      }
-    }
-  }
+  } } } } }
 
   //  Step 6 进行旋转一致检测，剔除不一致的匹配
   if (mbCheckOrientation) {
@@ -1781,10 +1749,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame,
         for (size_t j = 0, jend = rotHist[i].size(); j < jend; j++) {
           CurrentFrame.mvpMapPoints[rotHist[i][j]] = NULL;
           nmatches--;
-        }
-      }
-    }
-  }
+  } } } }
 
   return nmatches;
 }
@@ -1820,8 +1785,7 @@ void ORBmatcher::ComputeThreeMaxima(vector<int> *histo, const int L, int &ind1, 
     } else if (s > max3) {
       max3 = s;
       ind3 = i;
-    }
-  }
+  } }
 
   // 如果差距太大了,说明次优的非常不好,这里就索性放弃了,都置为-1
   if (max2 < 0.1f * (float) max1) {
@@ -1829,8 +1793,7 @@ void ORBmatcher::ComputeThreeMaxima(vector<int> *histo, const int L, int &ind1, 
     ind3 = -1;
   } else if (max3 < 0.1f * (float) max1) {
     ind3 = -1;
-  }
-}
+} }
 
 // Bit set count operation from
 // Hamming distance：两个二进制串之间的汉明距离，指的是其不同位数的个数
