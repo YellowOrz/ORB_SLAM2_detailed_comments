@@ -565,8 +565,7 @@ ORBextractor::ORBextractor(int _nfeatures,        //指定要提取的特征点�
       ++v0;
     umax[v] = v0;
     ++v0;
-  }
-}
+} }
 
 /**
  * @brief 计算特征点的方向
@@ -1059,11 +1058,9 @@ void ORBextractor::ComputeKeyPointsOctTree(
         //如果初始的列坐标就已经超过了有效的图像边界了，这里的“有效图像”是指原始的、可以提取FAST特征点的图像区域。
         //并且应该同前面行坐标的边界对应，都为-3
         //!BUG  正确应该是maxBorderX-3
-        if (iniX >= maxBorderX - 6)
-          continue;
+        if (iniX >= maxBorderX - 6)   continue;
         //如果最大坐标越界那么委屈一下
-        if (maxX > maxBorderX)
-          maxX = maxBorderX;
+        if (maxX > maxBorderX)    maxX = maxBorderX;
 
         // FAST提取兴趣点, 自适应阈值
         //这个向量存储这个cell中的特征点
@@ -1074,13 +1071,8 @@ void ORBextractor::ComputeKeyPointsOctTree(
              iniThFAST,            //检测阈值
              true);                //使能非极大值抑制
 
-        //如果这个图像块中使用默认的FAST检测阈值没有能够检测到角点
-        if (vKeysCell.empty()) {
-          //那么就使用更低的阈值来进行重新检测
-          FAST(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX),    //待检测的图像
-               vKeysCell,        //存储角点位置的容器
-               minThFAST,        //更低的检测阈值
-               true);            //使能非极大值抑制
+        if (vKeysCell.empty()) {  //默认的FAST检测阈值没有检测角点，用更低阈值
+          FAST(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX), vKeysCell, minThFAST, true);
         }
 
         //当图像cell中检测到FAST角点的时候执行下面的语句

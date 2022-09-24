@@ -260,9 +260,7 @@ vector<KeyFrame *> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F) {
           lKFsSharingWords.push_back(pKFi);
         }
         pKFi->mnRelocWords++;   // xzf：后面用来去除共同word不多的关键帧
-      }
-    }
-  }
+  } } }
   // 如果和当前帧具有公共单词的关键帧数目为0，无法进行重定位，返回空
   if (lKFsSharingWords.empty()) return vector<KeyFrame *>();
 
@@ -292,8 +290,7 @@ vector<KeyFrame *> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F) {
       float si = mpVoc->score(F->mBowVec, pKFi->mBowVec);
       pKFi->mRelocScore = si;
       lScoreAndMatch.push_back(make_pair(si, pKFi));
-    }
-  }
+  } }
 
   if (lScoreAndMatch.empty())
     return vector<KeyFrame *>();
@@ -327,8 +324,7 @@ vector<KeyFrame *> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F) {
       if (pKF2->mRelocScore > bestScore) {
         pBestKF = pKF2;
         bestScore = pKF2->mRelocScore;
-      }
-    }
+    } }
 
     lAccScoreAndMatch.push_back(make_pair(accScore, pBestKF));
 
@@ -354,9 +350,7 @@ vector<KeyFrame *> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F) {
       if (!spAlreadyAddedKF.count(pKFi)) {
         vpRelocCandidates.push_back(pKFi);
         spAlreadyAddedKF.insert(pKFi);
-      }
-    }
-  }
+  } } }
 
   return vpRelocCandidates;
 }

@@ -845,8 +845,7 @@ void Tracking::MonocularInitialization() {
         if (mvIniMatches[i] >= 0 && !vbTriangulated[i]) {
           mvIniMatches[i] = -1;
           nmatches--;
-        }
-      }
+      } }
 
       // Set Frame Poses
       // Step 7 将初始化的第一帧作为世界坐标系，因此第一帧变换矩阵为单位矩阵
@@ -1623,7 +1622,7 @@ void Tracking::UpdateLocalKeyFrames() {
   map<KeyFrame *, int> keyframeCounter;
   for (int i = 0; i < mCurrentFrame.N; i++) {
     if (mCurrentFrame.mvpMapPoints[i]) {
-      MapPoint *pMP = mCurrentFrame.mvpMapPoints[i];  // xzf: 获得 当前帧 的一个 有效 地图点
+      MapPoint *pMP = mCurrentFrame.mvpMapPoints[i];  // xzf: 获得 当前帧 的一个 有效地图点
       if (!pMP->isBad()) {
         // 得到观测到该地图点的 关键帧 和 该地图点在关键帧中的 索引
         const map<KeyFrame *, size_t> observations = pMP->GetObservations();
@@ -1727,8 +1726,7 @@ void Tracking::UpdateLocalKeyFrames() {
   if (pKFmax) {
     mpReferenceKF = pKFmax;
     mCurrentFrame.mpReferenceKF = mpReferenceKF;
-  }
-}
+} }
 
 /**
  * @details 重定位过程

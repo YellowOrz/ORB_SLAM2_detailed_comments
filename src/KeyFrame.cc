@@ -590,7 +590,7 @@ void KeyFrame::SetBadFlag() {
     mvpOrderedConnectedKeyFrames.clear();
 
     // Update Spanning Tree
-    // Step 4 更新生成树，主要是处理好父子关键帧，不然会造成整个关键帧维护的图断裂，或者混乱
+    // Step 4 更新生成树，主要是处理好父子关键帧，不然会造成整个关键帧维护的图断裂，或者混乱   xzf:最小生成树Kruskal算法
     // 候选父关键帧
     set<KeyFrame *> sParentCandidates;
     // 将当前帧的父关键帧放入候选父关键帧
@@ -630,11 +630,7 @@ void KeyFrame::SetBadFlag() {
                 pP = vpConnected[i];        //目前和子关键帧具有最大权值的关键帧（将来的父关键帧）
                 max = w;                    //这个最大的权值
                 bContinue = true;           //说明子节点找到了可以作为其新父关键帧的帧
-              }
-            }
-          }
-        }
-      }
+      } } } } }
 
       // Step 4.4 如果在上面的过程中找到了新的父节点
       // 下面代码应该放到遍历子关键帧循环中?
